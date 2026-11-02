@@ -1,6 +1,6 @@
 """Django settings for Campus Lost & Found Hub project.
 
-Phase 0 Foundation Architecture.
+Phase 0.1 Foundation Architecture (Neon PostgreSQL & Custom User Model).
 """
 
 from pathlib import Path
@@ -24,11 +24,6 @@ env = environ.Env(
     CSRF_TRUSTED_ORIGINS=(list, ["http://localhost:8000", "http://127.0.0.1:8000"]),
     TIME_ZONE=(str, "Asia/Kolkata"),
     LANGUAGE_CODE=(str, "en-us"),
-    DB_NAME=(str, "campus_lost_found"),
-    DB_USER=(str, "postgres"),
-    DB_PASSWORD=(str, ""),
-    DB_HOST=(str, "localhost"),
-    DB_PORT=(str, "5432"),
     CONN_MAX_AGE=(int, 600),
 )
 
@@ -109,24 +104,34 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
-# Database Configuration
-# Supports DATABASE_URL or individual credentials; never hardcoded.
-if env("DATABASE_URL", default=None):
-    DATABASES = {
-        "default": env.db("DATABASE_URL", default=None)
-    }
-else:
-    DATABASES = {
-        "default": {
-            "ENGINE": env("DB_ENGINE", default="django.db.backends.postgresql"),
-            "NAME": env("DB_NAME", default="campus_lost_found"),
-            "USER": env("DB_USER", default="postgres"),
-            "PASSWORD": env("DB_PASSWORD", default=""),
-            "HOST": env("DB_HOST", default="localhost"),
-            "PORT": env("DB_PORT", default="5432"),
-            "CONN_MAX_AGE": env.int("CONN_MAX_AGE", default=600),
-        }
-    }
+# Database Configuration (Neon PostgreSQL via DATABASE_URL)
+# Strictly environment-driven, never hardcoded.
+DATABASE_URL = env("DATABASE_URL", default=None)
+if not DATABASE_URL:
+    raise ValueError(
+        "CRITICAL ERROR: DATABASE_URL environment variable is not set. "
+        "Define DATABASE_URL in your .env file with your Neon PostgreSQL connection string."
+    )
+
+DATABASES = {
+    "default": env.db("DATABASE_URL")
+}
+
+# SSL and connection pooling configuration for Neon
+db_host = DATABASES["default"].get("HOST", "")
+if "neon.tech" in db_host:
+    DATABASES["default"].setdefault("OPTIONS", {})
+    DATABASES["default"]["OPTIONS"].setdefault("sslmode", "require")
+
+DATABASES["default"]["CONN_MAX_AGE"] = env.int("CONN_MAX_AGE", default=600)
+
+# If running Django test runner against Neon, route through the direct endpoint
+# because PgBouncer pooler endpoints reject administrative CREATE DATABASE queries
+if "test" in sys.argv and "-pooler" in DATABASES["default"].get("HOST", ""):
+    DATABASES["default"]["HOST"] = DATABASES["default"]["HOST"].replace("-pooler", "")
+
+# Custom User Model (Configured in Phase 0.1 before dependent model migrations)
+AUTH_USER_MODEL = "accounts.CampusUser"
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [

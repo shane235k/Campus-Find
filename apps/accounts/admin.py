@@ -1,5 +1,6 @@
-"""Admin configuration for accounts app.
+"""Admin configuration for accounts app."""
+from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
+from .models import CampusUser
 
-Admin registrations are scheduled for implementation in Phase 1.
-"""
-from django.contrib import admin  # noqa: F401
+admin.site.register(CampusUser, UserAdmin)
