@@ -9,7 +9,7 @@
 | **Phase 1** | **Authentication & User Management** | **COMPLETED** | Completed |
 | **Phase 2** | **Lost & Found Core (Reporting, Items, Images)** | **COMPLETED** (Migrations Deferred: Network) | Phase 2 Milestone |
 | **Phase 2.1** | **Lost & Found Core Security, Integrity & Workflow Audit** | **COMPLETED** | Phase 2.1 Milestone |
-| **Phase 3** | **Intelligent Matching Engine (Sentence Transformers & pgvector)**| **NOT STARTED** | Phase 3 Milestone |
+| **Phase 3** | **Intelligent Matching Engine (Sentence Transformers & pgvector)**| **COMPLETED** (Migrations Deferred: Network) | Phase 3 Milestone |
 | **Phase 4** | **Ownership Claims & Administrative Verification** | **NOT STARTED** | Phase 4 Milestone |
 | **Phase 5** | **Dashboards, Notifications & Live Telemetry** | **NOT STARTED** | Phase 5 Milestone |
 | **Phase 6** | **Comprehensive Testing, Hardening & Deployment** | **NOT STARTED** | Phase 6 Milestone |
@@ -145,10 +145,46 @@
 
 ---
 
-## 5. Deliberately Deferred Scope
+## 5. Phase 3 Implementation Checklist (Intelligent Matching Engine)
 
-- **Phase 2**: `Item`, `Category`, `CampusLocation`, and `ItemImage` models; item reporting forms, Pillow image thumbnails, and directory search filters.
-- **Phase 3**: Sentence Transformers model inference (`all-MiniLM-L6-v2`), 384-dim vector generation, and nearest-neighbor cosine similarity queries.
-- **Phase 4**: `Claim` model, ownership proof uploads, and administrative claim dispute resolution.
+- [x] **Domain Models (pps.matching.models)**:
+  - ItemEmbedding: id (UUID), item (OneToOneField to Item), mbedding (VectorField(384)), model_name, 	ext_hash, timestamps.
+  - PotentialMatch: id (UUID), lost_item (FK to Item), ound_item (FK to Item), description_similarity, 	itle_similarity, category_score, location_score, date_score, inal_score, status (SUGGESTED, INTERESTED, DISMISSED, CLAIMED, VERIFIED, REJECTED), xplanation, timestamps.
+  - Model validation: Enforces that lost_item.item_type == LOST and ound_item.item_type == FOUND.
+  - Database constraint: UniqueConstraint(fields=['lost_item', 'found_item']) to prevent duplicate pairs.
+- [x] **Offline Database Migration**:
+  - Generated pps/matching/migrations/0002_itemembedding_potentialmatch.py with explicit dependencies on items.0001_initial and matching.0001_initial.
+  - Migration graph validated with makemigrations --check --dry-run (0 unapplied/conflicting migrations).
+- [x] **Sentence Transformers & Embedding Pipeline (pps.matching.services)**:
+  - Installed and verified sentence-transformers and ll-MiniLM-L6-v2 model inference (384 dimensions).
+  - In-process singleton model caching (_CACHED_MODEL) to avoid redundant disk I/O.
+  - Canonical text serialization combining item title, category, location, and description.
+  - SHA-256 text hashing to prevent unnecessary re-embedding when non-text attributes change.
+  - Graceful fallback: Normalized 384-dimensional hashed-token projection if offline or models are unavailable.
+- [x] **Candidate Filtering & Bi-directional Matching**:
+  - Automatically pairs new LOST items against existing active FOUND items, and new FOUND items against existing active LOST items.
+  - Excludes identical items, self-matches, and RESOLVED / CLOSED items.
+- [x] **Hybrid Composite Scoring Formula**:
+  - Final Score = (0.45 * Description) + (0.20 * Title) + (0.15 * Category) + (0.10 * Location) + (0.10 * Date).
+  - Normalized strictly within [0.0, 1.0].
+  - Transparent date decay formula and campus building keyword matching.
+- [x] **Explainable AI Reasoning**:
+  - Dynamically synthesizes human-readable match explanations from underlying score metrics.
+- [x] **Web Views & Academic Demonstration UI**:
+  - MatchingHubView (/matching/): Filter tabs, match cards with percentage badges, on-demand scan button.
+  - ItemMatchesView (/matching/item/<uuid:item_id>/): Target item header with candidate comparisons.
+  - MatchDetailView (/matching/<uuid:match_id>/): Score circular gauge, 5-component progress bars, mathematical formula breakdown, and side-by-side card comparison.
+  - MatchActionView (/matching/<uuid:match_id>/action/): POST-only status updater (Express Interest, Dismiss, Reset).
+  - TriggerMatchingView: POST-only scan triggers for specific items or platform-wide scans.
+- [x] **Automated Test Suite Expansion**:
+  - 18 comprehensive tests in pps/matching/tests.py verifying embeddings, formulas, constraints, permissions, and views.
+  - Total project test suite: 94/94 tests passing (0 failures, 0 errors).
+
+---
+
+## 6. Deliberately Deferred Scope
+
+- **Phase 4**: Claim model, ownership proof uploads, and administrative claim dispute resolution.
 - **Phase 5**: Real-time notifications, email dispatches, and live telemetry.
+- **Phase 6**: Comprehensive testing, hardening, and production deployment.
 - **Infrastructure**: Celery, Redis, Elasticsearch, and microservices (specifically excluded by specification).

@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Matches for "{{ target_item.title }}" — AI Matching Engine{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Breadcrumb Navigation -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'matching:hub' %}" class="text-decoration-none">Matching Hub</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'items:detail' target_item.id %}" class="text-decoration-none">{{ target_item.title|truncatechars:25 }}</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Potential Matches</li>
+    </ol>
+  </nav>
+
+  <!-- Target Item Header Card -->
+  <div class="card border-0 shadow-sm rounded-3 mb-4 bg-white overflow-hidden">
+    <div class="card-body p-4">
+      <div class="row align-items-center g-4">
+        <div class="col-md-2 text-center text-md-start">
+          {% if target_item.image %}
+            <img src="{{ target_item.image.url }}" alt="{{ target_item.title }}" class="rounded-3 shadow-sm img-fluid" style="max-height: 110px; width: 110px; object-fit: cover;">
+          {% else %}
+            <div class="bg-light rounded-3 d-flex align-items-center justify-content-center text-muted border mx-auto mx-md-0" style="width: 110px; height: 110px;">
+              <i class="bi bi-image fs-1"></i>
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="col-md-7">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            {% if target_item.is_lost %}
+              <span class="badge bg-danger text-white px-2 py-1"><i class="bi bi-exclamation-triangle-fill me-1"></i> LOST ITEM</span>
+            {% else %}
+              <span class="badge bg-success text-white px-2 py-1"><i class="bi bi-check-circle-fill me-1"></i> FOUND ITEM</span>
+            {% endif %}
+            <span class="badge bg-light text-navy border">{{ target_item.status }}</span>
+            <span class="text-muted small"><i class="bi bi-calendar3 me-1"></i>{{ target_item.date_lost_or_found|date:"M d, Y" }}</span>
+          </div>
+          <h3 class="fw-bold text-navy mb-1">{{ target_item.title }}</h3>
+          <p class="text-muted small mb-2">{{ target_item.description|truncatechars:180 }}</p>
+          <div class="d-flex flex-wrap gap-3 small text-muted">
+            <span><i class="bi bi-tag text-primary me-1"></i>{{ target_item.category.name }}</span>
+            <span><i class="bi bi-geo-alt text-danger me-1"></i>{{ target_item.location.name }}</span>
+            <span><i class="bi bi-person text-secondary me-1"></i>Reported by {{ target_item.reporter_display_name }}</span>
+          </div>
+        </div>
+
+        <div class="col-md-3 text-md-end">
+          <form method="post" action="{% url 'matching:trigger_item' target_item.id %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary rounded-pill px-3 shadow-sm w-100 mb-2" style="background-color: #0f2942; border-color: #0f2942;">
+              <i class="bi bi-arrow-repeat me-1"></i> Re-scan Candidates
+            </button>
+          </form>
+          <a href="{% url 'items:detail' target_item.id %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3 w-100">
+            <i class="bi bi-eye me-1"></i> View Item Detail
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section Title -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="fw-bold text-navy mb-0">
+      Potential Matching Reports ({{ matches|length }})
+    </h4>
+    <span class="text-muted small">Ranked by hybrid composite similarity</span>
+  </div>
+
+  <!-- Matches Listing -->
+  {% if matches %}
+    <div class="row g-4">
+      {% for match in matches %}
+        <div class="col-12">
+          <div class="card border-0 shadow-sm rounded-3 overflow-hidden bg-white">
+            <div class="card-body p-4">
+              <div class="row g-3 align-items-center">
+                <!-- Image -->
+                <div class="col-md-2 text-center text-md-start">
+                  {% if match.found_item.image and target_item.is_lost %}
+                    <img src="{{ match.found_item.image.url }}" alt="{{ match.found_item.title }}" class="rounded shadow-sm" style="width: 80px; height: 80px; object-fit: cover;">
+                  {% elif match.lost_item.image and not target_item.is_lost %}
+                    <img src="{{ match.lost_item.image.url }}" alt="{{ match.lost_item.title }}" class="rounded shadow-sm" style="width: 80px; height: 80px; object-fit: cover;">
+                  {% else %}
+                    <div class="bg-light rounded d-flex align-items-center justify-content-center text-muted border mx-auto mx-md-0" style="width: 80px; height: 80px;">
+                      <i class="bi bi-image fs-3"></i>
+                    </div>
+                  {% endif %}
+                </div>
+
+                <!-- Info -->
+                <div class="col-md-7">
+                  <div class="d-flex align-items-center gap-2 mb-1">
+                    {% if target_item.is_lost %}
+                      <span class="badge bg-success text-white">FOUND ITEM</span>
+                      <h5 class="fw-bold text-navy mb-0 fs-6">
+                        <a href="{% url 'items:detail' match.found_item.id %}" class="text-navy text-decoration-none hover-primary">
+                          {{ match.found_item.title }}
+                        </a>
+                      </h5>
+                    {% else %}
+                      <span class="badge bg-danger text-white">LOST ITEM</span>
+                      <h5 class="fw-bold text-navy mb-0 fs-6">
+                        <a href="{% url 'items:detail' match.lost_item.id %}" class="text-navy text-decoration-none hover-primary">
+                          {{ match.lost_item.title }}
+                        </a>
+                      </h5>
+                    {% endif %}
+                  </div>
+
+                  <p class="text-secondary small mb-2">
+                    {% if target_item.is_lost %}
+                      {{ match.found_item.description|truncatechars:150 }}
+                    {% else %}
+                      {{ match.lost_item.description|truncatechars:150 }}
+                    {% endif %}
+                  </p>
+
+                  <div class="small text-muted p-2 bg-light rounded-2 border-start border-3 border-primary mb-2">
+                    <i class="bi bi-robot text-primary me-1"></i> {{ match.explanation }}
+                  </div>
+                </div>
+
+                <!-- Score & Action -->
+                <div class="col-md-3 text-center text-md-end">
+                  <div class="mb-2">
+                    <span class="fs-3 fw-bold text-success">{{ match.match_percentage }}%</span>
+                    <span class="d-block small text-muted">Composite Match</span>
+                  </div>
+                  <a href="{% url 'matching:match_detail' match.id %}" class="btn btn-outline-primary btn-sm rounded-pill px-3 w-100 mb-2">
+                    <i class="bi bi-bar-chart-steps me-1"></i> View AI Analysis
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="card border-0 shadow-sm rounded-3 p-5 text-center bg-white">
+      <div class="feature-icon-wrap icon-purple mx-auto mb-3" style="width: 56px; height: 56px; font-size: 1.5rem;">
+        <i class="bi bi-search"></i>
+      </div>
+      <h5 class="fw-bold text-navy mb-1">No Matches Found for this Item</h5>
+      <p class="text-muted small mx-auto mb-3" style="max-width: 480px;">
+        Our AI matching engine hasn't detected any opposite-type reports exceeding the candidate threshold yet. Check back as new campus reports are logged.
+      </p>
+      <form method="post" action="{% url 'matching:trigger_item' target_item.id %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline-primary rounded-pill btn-sm px-4">
+          <i class="bi bi-arrow-repeat me-1"></i> Run Scan Again
+        </button>
+      </form>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

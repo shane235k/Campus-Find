@@ -40,6 +40,17 @@
 | `POST` | `/items/<uuid:pk>/delete/` | `items:delete` | Strictly POST-only deletion of report with image disk cleanup | Owner or Admin Only (405 for GET, 403 for non-owners) |
 | `POST` | `/items/<uuid:pk>/status/` | `items:update_status` | Staff admin endpoint to advance report status | Staff Admin Only (403 for regular students) |
 
+### 2.4. AI Semantic Matching Endpoints (`/matching/`) (Implemented in Phase 3)
+
+| Method | URL Pattern | View Name | Description | Access Control |
+| :--- | :--- | :--- | :--- | :--- |
+| `GET` | `/matching/` | `matching:hub`, `matching:index` | Matching hub with telemetry cards, status filters, and ranked match list | Authenticated (User-scoped; Admin platform-wide) |
+| `GET` | `/matching/item/<uuid:item_id>/` | `matching:item_matches` | Candidate matches for a specific item report | Item Owner or Admin Only |
+| `GET` | `/matching/<uuid:match_id>/` | `matching:match_detail` | Detailed side-by-side comparison with 5-component scoring progress bars | Match Participant or Admin Only |
+| `POST` | `/matching/<uuid:match_id>/action/` | `matching:match_action` | Update match status (`interested`, `dismiss`, `reset`) | Match Participant or Admin Only |
+| `POST` | `/matching/trigger/` | `matching:trigger_all` | Trigger on-demand match scan across active reports | Authenticated |
+| `POST` | `/matching/item/<uuid:item_id>/trigger/` | `matching:trigger_item` | Re-scan candidate reports for a specific item | Item Owner or Admin Only |
+
 ---
 
 ## 3. Active REST API Endpoints (`/api/v1/`) (Implemented in Phase 2)

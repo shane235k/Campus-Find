@@ -28,8 +28,8 @@
             <a href="{% url 'items:report_found' %}" class="btn btn-success btn-sm rounded-pill px-3 py-2 fw-semibold shadow-sm">
               <i class="bi bi-plus-circle me-1"></i> Report Found
             </a>
-            <a href="{% url 'accounts:profile' %}" class="btn btn-outline-light btn-sm rounded-pill px-3 py-2 fw-semibold">
-              <i class="bi bi-person-gear me-1"></i> Profile
+            <a href="{% url 'matching:hub' %}" class="btn btn-warning btn-sm rounded-pill px-3 py-2 fw-semibold shadow-sm text-dark">
+              <i class="bi bi-cpu me-1"></i> AI Matches ({{ potential_matches_count|default:"0" }})
             </a>
           </div>
         </div>

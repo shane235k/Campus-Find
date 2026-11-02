@@ -4,7 +4,7 @@
 [![PostgreSQL](https://img.shields.io/badge/Neon%20PostgreSQL-Cloud-00E599?style=for-the-badge&logo=postgresql&logoColor=white)](https://neon.tech/)
 [![pgvector](https://img.shields.io/badge/pgvector-Enabled-336791?style=for-the-badge)](https://github.com/pgvector/pgvector)
 [![Bootstrap 5](https://img.shields.io/badge/Bootstrap-5.3-7952B3?style=for-the-badge&logo=bootstrap&logoColor=white)](https://getbootstrap.com/)
-[![Phase 2 & 2.1 Status](https://img.shields.io/badge/Phase%202%20%26%202.1-AUDITED%20%26%20VERIFIED-success?style=for-the-badge)](#)
+[![Phase 3 Status](https://img.shields.io/badge/Phase%203-AI%20MATCHING%20COMPLETED-success?style=for-the-badge)](#)
 
 A centralized university platform engineered to reunite students, faculty, and campus staff with misplaced belongings through automated cataloging, verified ownership claims, and an AI semantic matching engine powered by Sentence Transformers and Neon PostgreSQL `pgvector`.
 
@@ -147,7 +147,7 @@ python manage.py assign_super_admin admin@university.edu
 ```bash
 python manage.py test apps config
 ```
-*All 76 test cases pass with status `OK` (0 failures, 0 errors across accounts, items, dashboard, and config).*
+*All 94 test cases pass with status `OK` (0 failures, 0 errors across accounts, items, matching, dashboard, and config).*
 
 ### 3.8. Start the Development Server
 ```bash
@@ -188,6 +188,20 @@ Visit `http://127.0.0.1:8000/` in your browser.
    - Deletion endpoint is strictly POST-only (rejects GET with HTTP 405 Method Not Allowed).
 6. **REST API**:
    - Full DRF endpoints under `/api/v1/items/`, `/api/v1/categories/`, `/api/v1/locations/`.
+
+### 4.3. Intelligent Matching Engine (Phase 3)
+1. **Dense Semantic Embeddings**:
+   - `sentence-transformers/all-MiniLM-L6-v2` produces 384-dimensional unit vectors stored in `ItemEmbedding`.
+   - In-process singleton model caching prevents repeated disk I/O.
+2. **SHA-256 Text Serialization**:
+   - Hashes canonical narrative to skip re-embedding when unrelated fields change.
+3. **Hybrid Composite Scoring**:
+   - Description Semantic Similarity (45%) + Title Similarity (20%) + Category Match (15%) + Location Proximity (10%) + Date Proximity (10%).
+4. **Explainable AI Reasoning**:
+   - Every match generated produces human-readable natural language justifications derived from actual metric weights.
+5. **Interactive Academic Demonstration UI**:
+   - Dedicated Matching Hub (`/matching/`), Item-specific match listings (`/matching/item/<uuid:item_id>/`), and side-by-side comparison with score progress bars (`/matching/<uuid:match_id>/`).
+   - Interactive match actions: Express Interest (`INTERESTED`), Dismiss (`DISMISSED`), or Re-open.
 
 ---
 

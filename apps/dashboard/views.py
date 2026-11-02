@@ -10,6 +10,7 @@ from apps.accounts.permissions import (
     SuperAdminRequiredMixin,
 )
 from apps.items.models import CampusLocation, Category, Item
+from apps.matching.models import PotentialMatch
 
 
 class DashboardDispatcher(TemplateView):
@@ -46,6 +47,14 @@ class StudentDashboardView(StudentRequiredMixin, TemplateView):
 
         recent_reports = user_items.select_related("category", "location").order_by("-created_at")[:8]
 
+        # Phase 3 AI Matches count for student
+        student_matches = PotentialMatch.objects.filter(
+            Q(lost_item__reported_by=user) | Q(found_item__reported_by=user)
+        ).exclude(
+            Q(lost_item__status__in=[Item.ItemStatus.RESOLVED, Item.ItemStatus.CLOSED]) |
+            Q(found_item__status__in=[Item.ItemStatus.RESOLVED, Item.ItemStatus.CLOSED])
+        )
+
         context.update({
             "page_title": "Student Dashboard",
             "active_tab": "dashboard",
@@ -54,6 +63,7 @@ class StudentDashboardView(StudentRequiredMixin, TemplateView):
             "found_reports": counts["found"] or 0,
             "open_reports": counts["open"] or 0,
             "resolved_reports": counts["resolved"] or 0,
+            "potential_matches_count": student_matches.count(),
             "recent_reports": recent_reports,
         })
         return context
@@ -81,6 +91,9 @@ class AdminDashboardView(AdminRequiredMixin, TemplateView):
             .order_by("-created_at")[:12]
         )
 
+        # Phase 3 AI Matches counts for admin operations
+        platform_matches = PotentialMatch.objects.all()
+
         context.update({
             "page_title": "Administrator Operations Console",
             "active_tab": "admin_dashboard",
@@ -92,6 +105,8 @@ class AdminDashboardView(AdminRequiredMixin, TemplateView):
             "claim_pending_items": counts["claim_pending"] or 0,
             "categories_count": Category.objects.count(),
             "locations_count": CampusLocation.objects.count(),
+            "total_matches_count": platform_matches.count(),
+            "high_confidence_matches_count": platform_matches.filter(final_score__gte=0.70).count(),
             "recent_items": recent_items,
         })
         return context

@@ -20,8 +20,11 @@
             <p class="text-white-50 mb-0">Campus Lost &amp; Found Operations Desk — Review catalog submissions, adjust workflow states, and oversee physical inventory.</p>
           </div>
           <div class="col-md-4 text-md-end d-flex justify-content-md-end gap-2 flex-wrap">
-            <a href="/admin/items/item/" target="_blank" class="btn btn-warning btn-sm rounded-pill px-3 py-2 fw-semibold shadow-sm text-dark">
-              <i class="bi bi-shield-lock-fill me-1"></i> Django Admin Items
+            <a href="{% url 'matching:hub' %}" class="btn btn-warning btn-sm rounded-pill px-3 py-2 fw-semibold shadow-sm text-dark">
+              <i class="bi bi-cpu me-1"></i> AI Matching Hub ({{ total_matches_count|default:"0" }})
+            </a>
+            <a href="/admin/items/item/" target="_blank" class="btn btn-outline-light btn-sm rounded-pill px-3 py-2 fw-semibold">
+              <i class="bi bi-shield-lock-fill me-1"></i> Django Admin
             </a>
             <a href="{% url 'accounts:profile' %}" class="btn btn-outline-light btn-sm rounded-pill px-3 py-2 fw-semibold">
               <i class="bi bi-person-gear me-1"></i> Profile

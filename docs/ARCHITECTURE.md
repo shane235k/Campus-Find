@@ -276,3 +276,43 @@ campus_lost_found/
         DEVELOPMENT_LOG.md   # Mandatory development diagnostics log
         IMPLEMENTATION_STATUS.md # Roadmaps and phase checklist
 ```
+
+
+---
+
+## 5. Intelligent Matching Engine Architecture (Phase 3)
+
+### 5.1. Embedding Pipeline & In-Memory Model Caching
+- **Transformer Architecture**: Dense semantic representations are produced using `sentence-transformers/all-MiniLM-L6-v2` yielding 384-dimensional unit-normalized embeddings ($\|\mathbf{v}\|_2 = 1$).
+- **In-Process Singleton**: `apps.matching.services._CACHED_MODEL` is lazily loaded upon first inference and cached in memory across request lifecycles to avoid repeated cold-start loading times.
+- **Canonical Serialization**: Combines item title, category, location, and narrative description:
+  $$\text{Text} = \text{"Title: [title]. Category: [category]. Location: [location]. Details: [description]"}$$
+- **SHA-256 Digest**: Computed across the canonical narrative. Re-embedding is bypassed when an item is modified without altering narrative fields.
+- **Deterministic Token Projection Fallback**: If models or network downloads are unreachable, a normalized 384-dimensional hashed-token projection maintains vector dimensional integrity without hardcoding artificial scores.
+
+### 5.2. Structured Candidate Filtering & Bi-Directional Matching
+Matching evaluates candidate pairs bi-directionally:
+- When a new **LOST** item is logged, candidate **FOUND** items are queried.
+- When a new **FOUND** item is logged, candidate **LOST** items are queried.
+- Self-matches and reports with status `RESOLVED` or `CLOSED` are strictly excluded at the query level.
+
+### 5.3. Hybrid Composite Scoring Formula
+The ranking engine combines dense cosine similarity with structured heuristics:
+
+$$\text{Final Score} = (S_{desc} \times 0.45) + (S_{title} \times 0.20) + (S_{cat} \times 0.15) + (S_{loc} \times 0.10) + (S_{date} \times 0.10)$$
+
+Where:
+- $S_{desc}$: Cosine similarity between $L_2$-normalized sentence embeddings.
+- $S_{title}$: Sequence character ratio blended with token-level Jaccard overlap ($0.5 \times \text{Seq} + 0.5 \times \text{Jaccard}$).
+- $S_{cat}$: Binary match ($1.0$ for exact category, $0.0$ for mismatch).
+- $S_{loc}$: $1.0$ for exact location, $0.6$ for shared campus building keywords, $0.0$ otherwise.
+- $S_{date}$: Piecewise temporal decay: $1.0$ (same day) $\rightarrow 0.95$ (1 day) $\rightarrow 0.85$ (3 days) $\rightarrow 0.70$ (7 days) $\rightarrow 0.50$ (14 days) $\rightarrow$ linear decay to $0.05$ (30 days) $\rightarrow 0.0$ ($>30$ days).
+
+### 5.4. Explainable AI & Workflow
+- **Explainability**: Every `PotentialMatch` record stores a human-readable explanation synthesized directly from underlying metrics.
+- **Asynchronous & Signal Integration**: An automated `post_save` signal on `Item` executes candidate matching on creation/update.
+- **Dedicated Interactive UI**:
+  - `/matching/`: Hub listing student-scoped or admin platform-wide matches.
+  - `/matching/item/<uuid:item_id>/`: Item-specific match candidates.
+  - `/matching/<uuid:match_id>/`: Deep inspection comparing items side-by-side with 5-component progress bars and formula breakdown.
+  - `/matching/<uuid:match_id>/action/`: POST endpoint to Express Interest (`INTERESTED`) or Dismiss (`DISMISSED`).
