@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" fill="none">
+  <!-- Rounded Base Background -->
+  <rect width="48" height="48" rx="12" fill="#0f2942" />
+  
+  <!-- Subtle accent circle -->
+  <circle cx="24" cy="24" r="16" stroke="#2563eb" stroke-width="2" stroke-opacity="0.4" fill="none" />
+  
+  <!-- Compass / Pin / Search Symbol -->
+  <circle cx="21" cy="21" r="8" stroke="#ffffff" stroke-width="2.5" />
+  <path d="M27 27L36 36" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" />
+  
+  <!-- Central Sparkle / Star (Finding the item) -->
+  <path d="M21 16V20M21 22V26M18.5 21H23.5" stroke="#38bdf8" stroke-width="1.5" stroke-linecap="round" />
+</svg>

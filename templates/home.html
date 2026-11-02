@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Campus Lost &amp; Found Hub — Reuniting Campus Belongings{% endblock %}
+
+{% block content %}
+<!-- ========================================================================
+     Hero Section
+     ======================================================================== -->
+<section class="hero-section text-center">
+  <div class="container position-relative">
+    <!-- Platform & Phase Badge -->
+    <div class="hero-badge">
+      <i class="bi bi-mortarboard-fill text-warning"></i>
+      <span>Official University Service &bull; {{ phase_tag }}</span>
+    </div>
+
+    <!-- Hero Title & Subtitle -->
+    <h1 class="hero-title">
+      Lost Something on Campus?<br>
+      <span style="color: #38bdf8;">We Help You Find It Faster.</span>
+    </h1>
+    <p class="hero-subtitle">
+      A centralized platform connecting students, faculty, and campus security. Report lost belongings, log found items, and let our semantic matching engine bridge the gap.
+    </p>
+
+    <!-- Visual Search Bar UI (Phase 0 UI Foundation) -->
+    <form id="heroSearchForm" class="hero-search-card" role="search">
+      <div class="row g-2 align-items-center">
+        <div class="col-12 col-md-6">
+          <div class="d-flex align-items-center ps-2">
+            <i class="bi bi-search text-muted me-2"></i>
+            <input 
+              type="text" 
+              id="heroSearchInput" 
+              class="form-control form-control-plaintext" 
+              placeholder="Search by item name, brand, color (e.g., Blue HydroFlask, Casio Watch)..."
+              aria-label="Search lost and found items"
+            >
+          </div>
+        </div>
+        <div class="col-12 col-md-3">
+          <select class="form-select form-select-plaintext" aria-label="Filter by Category">
+            <option selected value="">All Categories</option>
+            <option value="electronics">Electronics &amp; Laptops</option>
+            <option value="id_cards">Student IDs &amp; Wallets</option>
+            <option value="keys">Keys &amp; Access Cards</option>
+            <option value="bottles">Bottles &amp; Accessories</option>
+            <option value="books">Books &amp; Stationeries</option>
+          </select>
+        </div>
+        <div class="col-12 col-md-3 text-md-end">
+          <button type="submit" class="hero-search-btn w-100">
+            Search Hub
+          </button>
+        </div>
+      </div>
+    </form>
+
+    <!-- Search Notice Toast Placeholder (Dismissible) -->
+    <div id="searchPlaceholderNotice" class="alert alert-info border border-info border-opacity-25 rounded-pill shadow-sm d-none mt-3 max-w-md mx-auto" style="max-width: 600px;" role="alert">
+      <i class="bi bi-info-circle-fill me-2"></i>
+      <strong>Phase 0 Notice:</strong> Search query engine will be connected with the item database in Phase 2.
+    </div>
+
+    <!-- Action Buttons: Report Lost & Report Found -->
+    <div class="hero-actions">
+      <a href="{% url 'items:report_lost' %}" class="btn-report-lost shadow-sm">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <span>Report Lost Item</span>
+      </a>
+      <a href="{% url 'items:report_found' %}" class="btn-report-found shadow-sm">
+        <i class="bi bi-check-circle-fill"></i>
+        <span>Report Found Item</span>
+      </a>
+      <a href="{% url 'items:index' %}" class="btn btn-outline-light rounded-3 px-4 py-2" style="font-weight: 600;">
+        <i class="bi bi-collection me-1"></i> Browse Directory
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================================================
+     Platform Highlights & Value Pillars
+     ======================================================================== -->
+<section class="py-5 bg-white">
+  <div class="container">
+    <div class="row text-center mb-5">
+      <div class="col-lg-8 mx-auto">
+        <span class="text-primary fw-semibold small text-uppercase tracking-wider">How It Works</span>
+        <h2 class="fw-bold mt-1 text-navy">Built for University Campus Efficiency</h2>
+        <p class="text-muted">Say goodbye to scattered WhatsApp groups, social media threads, and lost noticeboards.</p>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="feature-card text-center text-md-start">
+          <div class="feature-icon-wrap icon-blue mx-auto mx-md-0">
+            <i class="bi bi-cpu-fill"></i>
+          </div>
+          <h4 class="fw-bold fs-5 mb-2">Smart Semantic AI Matching</h4>
+          <p class="text-muted small mb-0">
+            Powered by 384-dimensional sentence transformer embeddings and PostgreSQL pgvector. It understands synonyms and context, pairing "Navy blue Hydroflask" with "Dark blue water bottle".
+          </p>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="feature-card text-center text-md-start">
+          <div class="feature-icon-wrap icon-purple mx-auto mx-md-0">
+            <i class="bi bi-shield-lock-fill"></i>
+          </div>
+          <h4 class="fw-bold fs-5 mb-2">Verified Ownership Claims</h4>
+          <p class="text-muted small mb-0">
+            Secure verification workflow requiring serial numbers, specific identifying marks, or purchase receipts before item collection to protect students from fraudulent claims.
+          </p>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="feature-card text-center text-md-start">
+          <div class="feature-icon-wrap icon-emerald mx-auto mx-md-0">
+            <i class="bi bi-bell-fill"></i>
+          </div>
+          <h4 class="fw-bold fs-5 mb-2">Real-Time Match Alerts</h4>
+          <p class="text-muted small mb-0">
+            Get instant alerts when someone logs an item matching your lost report. Campus security desks and department lost-and-found boxes are automatically indexed.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================================================
+     Recently Reported Items Section (Empty State in Phase 0)
+     ======================================================================== -->
+<section class="py-5" style="background-color: #f8fafc;">
+  <div class="container">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+      <div>
+        <h3 class="fw-bold text-navy mb-1">Recently Reported Items</h3>
+        <p class="text-muted small mb-0">Live feed of lost and found belongings across university buildings.</p>
+      </div>
+      <div class="mt-3 mt-md-0">
+        <a href="{% url 'items:index' %}" class="btn btn-outline-primary rounded-pill btn-sm px-3 fw-semibold">
+          View All Items <i class="bi bi-arrow-right ms-1"></i>
+        </a>
+      </div>
+    </div>
+
+    <!-- Empty State Container -->
+    {% if recent_items %}
+      <div class="row g-3">
+        <!-- Future Item Cards (Phase 2) -->
+      </div>
+    {% else %}
+      <div class="empty-state-card">
+        <div class="empty-state-icon">
+          <i class="bi bi-inbox"></i>
+        </div>
+        <h4 class="fw-bold text-navy mb-2">No Items Reported Yet</h4>
+        <p class="text-muted small mx-auto mb-4" style="max-width: 480px;">
+          The hub is fresh and ready. When students or faculty report misplaced belongings, they will appear here with photos, dates, and locations.
+        </p>
+        <div class="d-flex justify-content-center gap-2">
+          <a href="{% url 'items:report_lost' %}" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-semibold">
+            <i class="bi bi-plus-circle me-1"></i> Report Lost Item
+          </a>
+          <a href="{% url 'items:report_found' %}" class="btn btn-outline-success btn-sm rounded-pill px-3 fw-semibold">
+            <i class="bi bi-check-circle me-1"></i> Report Found Item
+          </a>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- ========================================================================
+     Campus Authentication & Registration Call to Action
+     ======================================================================== -->
+<section class="py-5 bg-white border-top">
+  <div class="container">
+    <div class="row align-items-center g-4">
+      <div class="col-lg-8">
+        <h3 class="fw-bold text-navy mb-2">University Student or Staff Member?</h3>
+        <p class="text-muted mb-0">
+          Sign in with your campus credentials to track your reported items, manage active ownership claims, and customize match notifications.
+        </p>
+      </div>
+      <div class="col-lg-4 text-lg-end">
+        <div class="d-flex flex-wrap gap-2 justify-content-lg-end">
+          <a href="{% url 'accounts:login' %}" class="btn btn-outline-primary rounded-pill px-4 py-2 fw-semibold">
+            <i class="bi bi-box-arrow-in-right me-1"></i> Campus Login
+          </a>
+          <a href="{% url 'accounts:register' %}" class="btn btn-primary rounded-pill px-4 py-2 fw-semibold" style="background-color: #0f2942; border-color: #0f2942;">
+            <i class="bi bi-person-plus me-1"></i> Create Account
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

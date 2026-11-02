@@ -1,0 +1,409 @@
+/**
+ * Campus Lost & Found Hub — Global Stylesheet
+ * Phase 0 Technical Foundation
+ * Design: Navy Blue Primary, Clean White Backgrounds, Subtle Blue Accents
+ */
+
+:root {
+  --navy-primary: #0f2942;
+  --navy-dark: #0a1b2b;
+  --navy-light: #1a3c5e;
+  --blue-accent: #2563eb;
+  --blue-light: #38bdf8;
+  --blue-subtle: #eff6ff;
+  --blue-border: #bfdbfe;
+  --bg-main: #f8fafc;
+  --bg-card: #ffffff;
+  --text-primary: #1e293b;
+  --text-muted: #64748b;
+  --text-light: #94a3b8;
+  --success-color: #059669;
+  --warning-color: #d97706;
+  --danger-color: #dc2626;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-pill: 50px;
+  --shadow-sm: 0 1px 3px rgba(15, 41, 66, 0.05);
+  --shadow-md: 0 4px 14px rgba(15, 41, 66, 0.08);
+  --shadow-lg: 0 10px 30px rgba(15, 41, 66, 0.12);
+  --transition: all 0.2s ease-in-out;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: var(--text-primary);
+  background-color: var(--bg-main);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1 0 auto;
+}
+
+/* ==========================================================================
+   Navigation Bar
+   ========================================================================== */
+.navbar-custom {
+  background-color: var(--navy-primary);
+  box-shadow: 0 2px 10px rgba(15, 41, 66, 0.15);
+  padding: 0.85rem 1rem;
+}
+
+.navbar-brand-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.navbar-brand-wrap .brand-text {
+  font-weight: 700;
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+}
+
+.navbar-brand-wrap .brand-sub {
+  font-size: 0.72rem;
+  color: var(--blue-light);
+  font-weight: 500;
+  display: block;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.nav-link {
+  color: rgba(255, 255, 255, 0.85) !important;
+  font-weight: 500;
+  padding: 0.5rem 0.85rem !important;
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+}
+
+.nav-link:hover,
+.nav-link.active {
+  color: #ffffff !important;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-btn-outline {
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: var(--radius-pill);
+  padding: 0.45rem 1.15rem;
+  font-weight: 500;
+  transition: var(--transition);
+}
+
+.nav-btn-outline:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: #ffffff;
+  color: #ffffff;
+}
+
+.nav-btn-solid {
+  background-color: var(--blue-accent);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 0.45rem 1.25rem;
+  font-weight: 600;
+  transition: var(--transition);
+}
+
+.nav-btn-solid:hover {
+  background-color: #1d4ed8;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+}
+
+/* ==========================================================================
+   Hero Section
+   ========================================================================== */
+.hero-section {
+  background: linear-gradient(135deg, var(--navy-primary) 0%, var(--navy-light) 65%, #1e3a8a 100%);
+  color: #ffffff;
+  padding: 4.5rem 1rem 3.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-section::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  padding: 0.35rem 0.85rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.82rem;
+  font-weight: 500;
+  margin-bottom: 1.25rem;
+}
+
+.hero-title {
+  font-size: 2.75rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  margin-bottom: 1.25rem;
+}
+
+.hero-subtitle {
+  font-size: 1.15rem;
+  color: rgba(255, 255, 255, 0.85);
+  max-width: 650px;
+  margin: 0 auto 2.25rem;
+  line-height: 1.6;
+}
+
+/* Search Bar Component */
+.hero-search-card {
+  background: #ffffff;
+  border-radius: var(--radius-pill);
+  padding: 0.5rem 0.6rem 0.5rem 1.5rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18);
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.hero-search-card input {
+  border: none;
+  font-size: 1.05rem;
+  color: var(--text-primary);
+  outline: none;
+}
+
+.hero-search-card input::placeholder {
+  color: var(--text-light);
+}
+
+.hero-search-card select {
+  border: none;
+  border-left: 1px solid #e2e8f0;
+  padding-left: 1rem;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  background-color: transparent;
+  outline: none;
+}
+
+.hero-search-btn {
+  background-color: var(--navy-primary);
+  color: #ffffff;
+  border-radius: var(--radius-pill);
+  padding: 0.65rem 1.75rem;
+  font-weight: 600;
+  border: none;
+  transition: var(--transition);
+}
+
+.hero-search-btn:hover {
+  background-color: var(--blue-accent);
+  color: #ffffff;
+}
+
+/* Hero Action Buttons */
+.hero-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 2rem;
+}
+
+.btn-report-lost {
+  background-color: #ef4444;
+  color: #ffffff;
+  font-weight: 600;
+  padding: 0.75rem 1.75rem;
+  border-radius: var(--radius-md);
+  border: none;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+
+.btn-report-lost:hover {
+  background-color: #dc2626;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
+}
+
+.btn-report-found {
+  background-color: #10b981;
+  color: #ffffff;
+  font-weight: 600;
+  padding: 0.75rem 1.75rem;
+  border-radius: var(--radius-md);
+  border: none;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+
+.btn-report-found:hover {
+  background-color: #059669;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+}
+
+/* ==========================================================================
+   Cards & Layouts
+   ========================================================================== */
+.feature-card {
+  background-color: var(--bg-card);
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-lg);
+  padding: 1.75rem;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+  height: 100%;
+}
+
+.feature-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--blue-border);
+}
+
+.feature-icon-wrap {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.icon-blue {
+  background-color: #eff6ff;
+  color: var(--blue-accent);
+}
+
+.icon-purple {
+  background-color: #f5f3ff;
+  color: #7c3aed;
+}
+
+.icon-emerald {
+  background-color: #ecfdf5;
+  color: #059669;
+}
+
+/* Empty State Card */
+.empty-state-card {
+  background-color: var(--bg-card);
+  border: 2px dashed #cbd5e1;
+  border-radius: var(--radius-lg);
+  padding: 3.5rem 1.5rem;
+  text-align: center;
+}
+
+.empty-state-icon {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 1.25rem;
+  background-color: #f1f5f9;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-light);
+  font-size: 2rem;
+}
+
+/* Placeholder Page Card */
+.placeholder-card {
+  background-color: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 2.75rem 2rem;
+  box-shadow: var(--shadow-md);
+  border-top: 4px solid var(--navy-primary);
+}
+
+.badge-phase {
+  background-color: var(--blue-subtle);
+  color: var(--blue-accent);
+  border: 1px solid var(--blue-border);
+  font-weight: 600;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.8rem;
+}
+
+/* ==========================================================================
+   Footer
+   ========================================================================== */
+.footer-custom {
+  background-color: var(--navy-dark);
+  color: #cbd5e1;
+  padding: 3.5rem 1rem 1.5rem;
+  margin-top: 4rem;
+}
+
+.footer-brand {
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 0.5rem;
+}
+
+.footer-links a {
+  color: #94a3b8;
+  text-decoration: none;
+  transition: var(--transition);
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.92rem;
+}
+
+.footer-links a:hover {
+  color: #ffffff;
+  padding-left: 4px;
+}
+
+.footer-divider {
+  border-color: rgba(255, 255, 255, 0.1);
+  margin: 2rem 0 1.25rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 2rem;
+  }
+  .hero-search-card {
+    border-radius: var(--radius-md);
+    padding: 0.75rem;
+  }
+  .hero-search-card select {
+    border-left: none;
+    border-top: 1px solid #e2e8f0;
+    padding-left: 0;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+  }
+}

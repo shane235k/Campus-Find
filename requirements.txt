@@ -1,0 +1,10 @@
+# Campus Lost & Found Hub — Dependencies
+# Phase 0 Foundation
+
+Django>=5.1.0,<7.0.0
+djangorestframework>=3.15.0
+psycopg[binary]>=3.2.0
+pgvector>=0.3.0
+django-environ>=0.11.0
+Pillow>=10.4.0
+tzdata>=2024.1
