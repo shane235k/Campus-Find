@@ -4,7 +4,7 @@
 [![PostgreSQL](https://img.shields.io/badge/Neon%20PostgreSQL-Cloud-00E599?style=for-the-badge&logo=postgresql&logoColor=white)](https://neon.tech/)
 [![pgvector](https://img.shields.io/badge/pgvector-Enabled-336791?style=for-the-badge)](https://github.com/pgvector/pgvector)
 [![Bootstrap 5](https://img.shields.io/badge/Bootstrap-5.3-7952B3?style=for-the-badge&logo=bootstrap&logoColor=white)](https://getbootstrap.com/)
-[![Phase 0.1 Status](https://img.shields.io/badge/Phase%200.1-IN%20PROGRESS-yellow?style=for-the-badge)](#)
+[![Phase 0.1 Status](https://img.shields.io/badge/Phase%200.1-COMPLETED-success?style=for-the-badge)](#)
 
 A centralized university platform engineered to reunite students, faculty, and campus staff with misplaced belongings through automated cataloging, verified ownership claims, and an AI semantic matching engine powered by Sentence Transformers and Neon PostgreSQL `pgvector`.
 
@@ -69,7 +69,8 @@ Campus-Find/
     ├── DATABASE_SCHEMA.md          # Relational & vector schema specifications
     ├── API_DOCUMENTATION.md        # REST API endpoints & payload contracts
     ├── MATCHING_ENGINE.md          # 384-dim embeddings & composite ranking formula
-    └── IMPLEMENTATION_STATUS.md    # Phased roadmap & verification checklist
+    ├── IMPLEMENTATION_STATUS.md    # Phased roadmap & verification checklist
+    └── DEVELOPMENT_LOG.md          # Mandatory diagnostics policy & incident tracking
 ```
 
 ---
@@ -138,10 +139,22 @@ Visit **`http://127.0.0.1:8000/`** to view the live Campus Lost & Found Hub land
 
 Run the automated test suite:
 ```bash
-python manage.py test apps config
+python manage.py test apps config --keepdb
 ```
 
 Verify Django system configuration:
 ```bash
 python manage.py check
 ```
+
+---
+
+## 5. Architectural Documentation & Diagnostics
+
+Detailed blueprints and runtime diagnostics are maintained in [`docs/`](file:///c:/nvm/COLLEGE/Campus-Find/docs):
+- [Architecture Blueprint](file:///c:/nvm/COLLEGE/Campus-Find/docs/ARCHITECTURE.md)
+- [Database Schema & Models](file:///c:/nvm/COLLEGE/Campus-Find/docs/DATABASE_SCHEMA.md)
+- [REST API Specifications](file:///c:/nvm/COLLEGE/Campus-Find/docs/API_DOCUMENTATION.md)
+- [Intelligent Matching Engine Design](file:///c:/nvm/COLLEGE/Campus-Find/docs/MATCHING_ENGINE.md)
+- [Implementation Status Tracker](file:///c:/nvm/COLLEGE/Campus-Find/docs/IMPLEMENTATION_STATUS.md)
+- [Development Diagnostics Log](file:///c:/nvm/COLLEGE/Campus-Find/docs/DEVELOPMENT_LOG.md)
