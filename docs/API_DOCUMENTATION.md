@@ -1,116 +1,63 @@
-# Campus Lost & Found Hub — Planned REST API Specification
+# Campus Lost & Found Hub — API and Endpoint Specification
 
 ## 1. Overview & Conventions
 
-The platform will expose a RESTful API powered by **Django REST Framework (DRF)**. In Phase 0, DRF is installed and registered in `settings.py`. Full serializers, viewsets, and token-based endpoints will be exposed starting from Phase 1 through Phase 5.
+**Campus Lost & Found Hub** supports standard HTTP web endpoints (Phase 1) and will expose a dedicated RESTful API powered by **Django REST Framework (DRF)** in subsequent phases.
 
-### 1.1. Base URL
-All API endpoints will be versioned under the `/api/v1/` prefix:
+---
+
+## 2. Active Web & Application Endpoints (Phase 1)
+
+### 2.1. Authentication & User Management (`/accounts/`)
+
+| Method | URL Pattern | View Name | Description | Access Control |
+| :--- | :--- | :--- | :--- | :--- |
+| `GET` | `/accounts/` | `accounts:index` | Smart dispatcher to `/accounts/profile/` or `/accounts/login/` | Public |
+| `GET`, `POST` | `/accounts/register/` | `accounts:register` | Student self-service registration form with domain & ID checks | Anonymous Only |
+| `GET`, `POST` | `/accounts/login/` | `accounts:login` | Case-insensitive email/username login with brute-force throttling | Anonymous Only |
+| `POST` | `/accounts/logout/` | `accounts:logout` | POST-only session termination with CSRF validation | Authenticated |
+| `GET`, `POST` | `/accounts/profile/` | `accounts:profile` | User profile overview and form to edit non-sensitive attributes | Authenticated |
+| `GET`, `POST` | `/accounts/admin/provision/` | `accounts:create_admin` | Super Admin portal to provision staff administrator accounts | Super Admin Only |
+
+### 2.2. Role-Based Dashboards (`/dashboard/`)
+
+| Method | URL Pattern | View Name | Description | Access Control |
+| :--- | :--- | :--- | :--- | :--- |
+| `GET` | `/dashboard/` | `dashboard:index` | Role dispatcher routing user to `/student/`, `/admin/`, or `/super-admin/` | Authenticated |
+| `GET` | `/dashboard/student/` | `dashboard:student` | Student portal displaying reported items, active claims, and alerts | Student Role |
+| `GET` | `/dashboard/admin/` | `dashboard:admin` | Operations console for lost & found desk moderators and security | Admin / Staff Role |
+| `GET` | `/dashboard/super-admin/`| `dashboard:super_admin` | System command center with user counts and staff provisioning access | Super Admin Role |
+
+---
+
+## 3. Planned REST API Endpoints (`/api/v1/`)
+
+### 3.1. Base URL & Response Standard
 ```
 https://campus-hub.university.edu/api/v1/
 ```
 
-### 1.2. Authentication Methods
-1. **Session Authentication** (default for browser interactions and Django frontend).
-2. **Token / Bearer Authentication** (for mobile application and programmatic integrations).
-
-### 1.3. Standard Response Format
-All JSON responses follow a consistent envelope structure:
-
+JSON responses adhere to standard envelope structures:
 ```json
 {
   "success": true,
   "data": {},
   "message": "Operation completed successfully.",
   "meta": {
-    "timestamp": "2026-11-02T19:30:00+05:30",
+    "timestamp": "2026-11-02T20:30:00+05:30",
     "version": "v1"
   }
 }
 ```
 
-### 1.4. Standard Error Response
-```json
-{
-  "success": false,
-  "error": {
-    "code": "VALIDATION_FAILED",
-    "message": "The submitted payload contains validation errors.",
-    "details": {
-      "campus_id": ["A valid student or staff roll number is required."]
-    }
-  }
-}
-```
+### 3.2. Authentication (`/api/v1/auth/`)
+- `POST /api/v1/auth/register/`: JSON payload student registration.
+- `POST /api/v1/auth/login/`: Obtain session/auth token.
+- `POST /api/v1/auth/logout/`: Invalidate token.
+- `GET, PATCH /api/v1/auth/profile/`: Retrieve and update user profile.
 
----
-
-## 2. Planned API Endpoints
-
-### 2.1. Authentication (`/api/v1/auth/`) — Phase 1
-
-| Method | Endpoint | Description | Access |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/auth/register/` | Register student account with campus email | Public |
-| `POST` | `/auth/login/` | Authenticate and obtain session/auth token | Public |
-| `POST` | `/auth/logout/` | Invalidate current session/token | Authenticated |
-| `GET` | `/auth/profile/` | Retrieve current user profile and role | Authenticated |
-| `PUT/PATCH` | `/auth/profile/` | Update profile information | Authenticated |
-
-### 2.2. Categories & Locations (`/api/v1/categories/`, `/api/v1/locations/`) — Phase 2
-
-| Method | Endpoint | Description | Access |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/categories/` | List all active item categories | Public |
-| `GET` | `/locations/` | List campus buildings and designated recovery points | Public |
-
-### 2.3. Lost & Found Items (`/api/v1/items/`) — Phase 2
-
-| Method | Endpoint | Description | Access |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/items/` | Filterable list of lost and found items (pagination support) | Public |
-| `POST` | `/items/` | Submit a new lost or found item report (multipart image support) | Authenticated |
-| `GET` | `/items/{id}/` | Retrieve item details and verification fields | Public |
-| `PUT/PATCH` | `/items/{id}/` | Update report (creator or campus security) | Authenticated (Owner/Admin) |
-| `DELETE` | `/items/{id}/` | Withdraw or close report | Authenticated (Owner/Admin) |
-
-#### Query Parameters for `/items/`:
-- `item_type`: `LOST` or `FOUND`
-- `category`: Category slug (e.g., `electronics`, `keys`)
-- `location`: Building name or ID
-- `search`: Full-text title and description search
-- `date_after` / `date_before`: ISO 8601 date range filters
-- `status`: `REPORTED`, `MATCHED`, `CLAIMED`, `RESOLVED`
-
-### 2.4. Semantic Matching Engine (`/api/v1/matching/`) — Phase 3
-
-| Method | Endpoint | Description | Access |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/matching/potential-matches/` | Retrieve list of algorithmic matches for logged-in user | Authenticated |
-| `GET` | `/matching/item/{item_id}/candidates/` | Query top-$k$ nearest neighbors for a specific item | Authenticated |
-| `POST` | `/matching/matches/{id}/action/` | Accept or dismiss match suggestion | Authenticated (Owner/Admin) |
-| `POST` | `/matching/recalculate/` | Admin trigger to regenerate embeddings and matches | Admin Only |
-
-### 2.5. Claims & Verification (`/api/v1/claims/`) — Phase 4
-
-| Method | Endpoint | Description | Access |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/claims/` | List claims submitted by user or pending admin queue | Authenticated |
-| `POST` | `/claims/` | Submit ownership claim for a found item with proof | Authenticated |
-| `GET` | `/claims/{id}/` | Retrieve claim details, proof documents, review history | Claimant / Admin |
-| `POST` | `/claims/{id}/verify/` | Approve or reject claim with resolution note | Security / Admin |
-
-### 2.6. Notifications (`/api/v1/notifications/`) — Phase 5
-
-| Method | Endpoint | Description | Access |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/notifications/` | Retrieve paginated list of user notifications | Authenticated |
-| `POST` | `/notifications/{id}/read/` | Mark specific notification as read | Authenticated |
-| `POST` | `/notifications/read-all/` | Mark all notifications as read | Authenticated |
-
-### 2.7. Dashboard & Metrics (`/api/v1/dashboard/`) — Phase 5
-
-| Method | Endpoint | Description | Access |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/dashboard/student/` | Personal item summary, active claims, recent alerts | Authenticated |
-| `GET` | `/dashboard/admin/metrics/` | Platform recovery rate, open items, monthly volume | Admin Only |
+### 3.3. Items, Matching, & Claims (Phases 2-5)
+- `GET, POST /api/v1/items/`: Catalog search, filtering, and report creation.
+- `GET /api/v1/matching/potential-matches/`: Semantic pgvector match candidates.
+- `GET, POST /api/v1/claims/`: Verification challenge submissions and review queue.
+- `GET /api/v1/notifications/`: In-app notification feed.

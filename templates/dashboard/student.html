@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Student Portal — Campus Lost &amp; Found Hub{% endblock %}
+
+{% block content %}
+<section class="py-4" style="background-color: var(--bg-main); min-height: 85vh;">
+  <div class="container">
+    
+    <!-- Welcome Header Banner -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden" style="background: linear-gradient(135deg, var(--navy-primary) 0%, var(--navy-light) 100%);">
+      <div class="card-body p-4 p-md-5 text-white">
+        <div class="row align-items-center g-3">
+          <div class="col-md-8">
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <span class="badge bg-primary text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.05em;">Student Portal</span>
+              {% if user.student_id %}
+                <span class="badge bg-white bg-opacity-20 font-monospace" style="font-size: 0.7rem;">ID: {{ user.student_id }}</span>
+              {% endif %}
+            </div>
+            <h2 class="fw-bold mb-1">Welcome back, {{ user.first_name|default:user.username }}!</h2>
+            <p class="text-white-50 mb-0">Track your reported belongings, active ownership claims, and automated match alerts.</p>
+          </div>
+          <div class="col-md-4 text-md-end">
+            <a href="{% url 'accounts:profile' %}" class="btn btn-light btn-sm rounded-pill px-3 py-2 fw-semibold shadow-sm">
+              <i class="bi bi-person-gear me-1"></i> Edit Profile
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Stat Cards -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-lg-3">
+        <div class="card border-0 shadow-sm rounded-4 h-100 p-3 bg-white">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <span class="text-muted small fw-semibold">Reported Lost</span>
+            <div class="rounded-3 bg-danger-subtle p-2 text-danger">
+              <i class="bi bi-search fs-5"></i>
+            </div>
+          </div>
+          <h3 class="fw-bold mb-0 text-dark">0</h3>
+          <small class="text-muted">Items filed as missing</small>
+        </div>
+      </div>
+
+      <div class="col-6 col-lg-3">
+        <div class="card border-0 shadow-sm rounded-4 h-100 p-3 bg-white">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <span class="text-muted small fw-semibold">Reported Found</span>
+            <div class="rounded-3 bg-success-subtle p-2 text-success">
+              <i class="bi bi-box-seam fs-5"></i>
+            </div>
+          </div>
+          <h3 class="fw-bold mb-0 text-dark">0</h3>
+          <small class="text-muted">Handed to lost &amp; found</small>
+        </div>
+      </div>
+
+      <div class="col-6 col-lg-3">
+        <div class="card border-0 shadow-sm rounded-4 h-100 p-3 bg-white">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <span class="text-muted small fw-semibold">Active Claims</span>
+            <div class="rounded-3 bg-warning-subtle p-2 text-warning">
+              <i class="bi bi-shield-check fs-5"></i>
+            </div>
+          </div>
+          <h3 class="fw-bold mb-0 text-dark">0</h3>
+          <small class="text-muted">Awaiting desk review</small>
+        </div>
+      </div>
+
+      <div class="col-6 col-lg-3">
+        <div class="card border-0 shadow-sm rounded-4 h-100 p-3 bg-white">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <span class="text-muted small fw-semibold">AI Match Alerts</span>
+            <div class="rounded-3 bg-primary-subtle p-2 text-primary">
+              <i class="bi bi-cpu fs-5"></i>
+            </div>
+          </div>
+          <h3 class="fw-bold mb-0 text-dark">0</h3>
+          <small class="text-muted">Semantic match suggestions</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="row g-4">
+      
+      <!-- Recent Activity / Items Section -->
+      <div class="col-lg-8">
+        <div class="card border-0 shadow-sm rounded-4 bg-white mb-4">
+          <div class="card-header bg-white border-bottom p-4 d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-clock-history me-2 text-primary"></i>My Reported Belongings</h5>
+            <a href="{% url 'items:index' %}" class="btn btn-outline-primary btn-sm rounded-pill">
+              <i class="bi bi-grid me-1"></i> Browse All Items
+            </a>
+          </div>
+          <div class="card-body p-4 text-center py-5">
+            <div class="mb-3 text-muted">
+              <i class="bi bi-inbox fs-1"></i>
+            </div>
+            <h6 class="fw-bold text-dark mb-1">No Item Reports Yet</h6>
+            <p class="text-muted small mb-3">You haven't reported any lost or found items. Once Phase 2 is launched, reporting will be active right here.</p>
+            <div class="d-flex justify-content-center gap-2">
+              <a href="{% url 'items:index' %}" class="btn btn-primary btn-sm rounded-pill px-3" style="background-color: var(--navy-primary); border-color: var(--navy-primary);">
+                <i class="bi bi-search me-1"></i> Search Campus Catalog
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Claims Section -->
+        <div class="card border-0 shadow-sm rounded-4 bg-white">
+          <div class="card-header bg-white border-bottom p-4">
+            <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-shield-check me-2 text-primary"></i>My Ownership Claims</h5>
+          </div>
+          <div class="card-body p-4 text-center py-5">
+            <div class="mb-3 text-muted">
+              <i class="bi bi-shield-slash fs-1"></i>
+            </div>
+            <h6 class="fw-bold text-dark mb-1">No Active Claims</h6>
+            <p class="text-muted small mb-0">When you spot an item in the catalog and verify ownership, your claim status and verification steps will be tracked here.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions & Guidelines Sidebar -->
+      <div class="col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 bg-white mb-4">
+          <div class="card-header bg-white border-bottom p-4">
+            <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-lightning-charge me-2 text-warning"></i>Quick Actions</h6>
+          </div>
+          <div class="card-body p-4">
+            <div class="d-grid gap-2">
+              <a href="{% url 'items:index' %}" class="btn btn-light text-start py-2 px-3 rounded-3 border">
+                <i class="bi bi-grid me-2 text-primary"></i> Browse Found Items
+              </a>
+              <a href="{% url 'matching:index' %}" class="btn btn-light text-start py-2 px-3 rounded-3 border">
+                <i class="bi bi-cpu me-2 text-success"></i> Check AI Matching
+              </a>
+              <a href="{% url 'accounts:profile' %}" class="btn btn-light text-start py-2 px-3 rounded-3 border">
+                <i class="bi bi-person-circle me-2 text-info"></i> Manage Account Profile
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 bg-white">
+          <div class="card-header bg-white border-bottom p-4">
+            <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-info-circle me-2 text-primary"></i>Campus Desk Guidelines</h6>
+          </div>
+          <div class="card-body p-4 small text-muted">
+            <p class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Physical lost items can be claimed at the Central Student Services Desk (Library Building, Room 104).</p>
+            <p class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Always bring your student ID card when collecting verified items.</p>
+            <p class="mb-0"><i class="bi bi-check-circle-fill text-success me-2"></i>Items unclaimed for over 90 days are archived per university policy.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+{% endblock %}

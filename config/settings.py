@@ -1,6 +1,6 @@
 """Django settings for Campus Lost & Found Hub project.
 
-Phase 0.1 Foundation Architecture (Neon PostgreSQL & Custom User Model).
+Phase 1 Authentication & User Management.
 """
 
 from pathlib import Path
@@ -25,6 +25,7 @@ env = environ.Env(
     TIME_ZONE=(str, "Asia/Kolkata"),
     LANGUAGE_CODE=(str, "en-us"),
     CONN_MAX_AGE=(int, 600),
+    UNIVERSITY_EMAIL_DOMAINS=(list, ["university.edu"]),
 )
 
 # Read .env file if available
@@ -105,7 +106,6 @@ WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
 # Database Configuration (Neon PostgreSQL via DATABASE_URL)
-# Strictly environment-driven, never hardcoded.
 DATABASE_URL = env("DATABASE_URL", default=None)
 if not DATABASE_URL:
     raise ValueError(
@@ -125,13 +125,28 @@ if "neon.tech" in db_host:
 
 DATABASES["default"]["CONN_MAX_AGE"] = env.int("CONN_MAX_AGE", default=600)
 
-# If running Django test runner against Neon, route through the direct endpoint
-# because PgBouncer pooler endpoints reject administrative CREATE DATABASE queries
-if "test" in sys.argv and "-pooler" in DATABASES["default"].get("HOST", ""):
+# Administrative CLI commands against Neon: route through direct endpoint
+# (PgBouncer pooler endpoints in transaction mode reject administrative DDL or session commands)
+cli_direct_commands = ["migrate", "makemigrations", "test", "inspectdb", "verify_pgvector", "createsuperuser", "dbshell"]
+if any(cmd in sys.argv for cmd in cli_direct_commands) and "-pooler" in DATABASES["default"].get("HOST", ""):
     DATABASES["default"]["HOST"] = DATABASES["default"]["HOST"].replace("-pooler", "")
 
-# Custom User Model (Configured in Phase 0.1 before dependent model migrations)
+# Custom User Model
 AUTH_USER_MODEL = "accounts.CampusUser"
+
+# Authentication Backends
+AUTHENTICATION_BACKENDS = [
+    "apps.accounts.backends.EmailOrUsernameModelBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
+
+# Authentication URLs & Redirections
+LOGIN_URL = "accounts:login"
+LOGIN_REDIRECT_URL = "dashboard:index"
+LOGOUT_REDIRECT_URL = "home"
+
+# University Email Domain Validation (Phase 1)
+UNIVERSITY_EMAIL_DOMAINS = env.list("UNIVERSITY_EMAIL_DOMAINS", default=["university.edu"])
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -162,14 +177,14 @@ STATICFILES_DIRS = [
 ]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-# Media files (Item uploads)
+# Media files (Item uploads & Profile pictures)
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# Django REST Framework Settings (Phase 0 Foundation)
+# Django REST Framework Settings
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.SessionAuthentication",

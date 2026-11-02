@@ -14,25 +14,25 @@ graph TD
     end
     
     subgraph Application_Layer["Core Django Applications (apps/)"]
-        Accounts["accounts<br>(Auth, Campus SSO, CampusUser)"]
+        Accounts["accounts<br>(Auth, CampusUser, RBAC, Throttling)"]
         Items["items<br>(Catalog, Reports, Locations)"]
         Matching["matching<br>(pgvector, Sentence Transformers)"]
         Claims["claims<br>(Proof Submission, Verification)"]
         Notifications["notifications<br>(In-app Alerts, Emails)"]
-        Dashboard["dashboard<br>(Student & Admin KPI Hub)"]
+        Dashboard["dashboard<br>(Role-Based Dispatcher & Views)"]
     end
     
     subgraph Data_Layer["Data & Persistence Layer"]
         NeonDB[("Neon Serverless PostgreSQL (Cloud)<br>SSL Enabled (sslmode=require)")]
         PGV[("pgvector Extension<br>384-dim HNSW Index")]
-        Media[("Media Storage<br>/media/item_images/")]
+        Media[("Media Storage<br>/media/profile_pics/ & item_images/")]
     end
     
     Client -->|HTTPS / HTTP| Presentation_Layer
     Presentation_Layer --> Application_Layer
     Accounts --> NeonDB
+    Accounts --> Media
     Items --> NeonDB
-    Items --> Media
     Matching --> PGV
     Claims --> NeonDB
     Notifications --> NeonDB
@@ -49,81 +49,136 @@ graph TD
 | **Framework** | Django | 6.1.x / 5.1+ | Robust, secure, batteries-included web framework with native ORM, authentication, and templating. |
 | **API Engine** | Django REST Framework | 3.18.x | Modular REST API capabilities for future mobile client and single-page integrations. |
 | **Database** | Neon PostgreSQL | Hosted Serverless PostgreSQL | Cloud-native serverless PostgreSQL with autoscaling, SSL encryption, and native pgvector support. |
-| **Vector Engine** | pgvector | Built-in Extension / 0.5.x (Python) | High-performance vector similarity search natively in PostgreSQL, eliminating separate vector database infrastructure. |
-| **User Identity** | `CampusUser` | `AbstractUser` Subclass | Configured as `AUTH_USER_MODEL` in Phase 0.1 before dependent model migrations to prevent schema migration locks. |
-| **Styling** | Bootstrap 5 | 5.3.x & Bootstrap Icons | Responsive, accessible CSS framework with customized campus navy/blue design tokens. |
+| **Vector Engine** | pgvector | Built-in Extension / 0.8.6 (Cloud) | High-performance vector similarity search natively in PostgreSQL, eliminating separate vector database infrastructure. |
+| **User Identity** | `CampusUser` | `AbstractUser` Subclass | Configured as `AUTH_USER_MODEL` with RBAC (`STUDENT`, `ADMIN`, `SUPER_ADMIN`), conditional unique `student_id`, and email normalization. |
+| **Styling** | Bootstrap 5 | 5.3.x & Bootstrap Icons | Responsive, accessible CSS framework with customized campus navy/blue design tokens (`#0f2942`). |
 | **Interactivity**| Vanilla JavaScript | ES6+ | Lightweight, dependency-free DOM manipulation without bloated node_modules or frontend builds. |
 | **Configuration**| django-environ | 0.14.x | Strictly 12-Factor App compliant environment variable management via `DATABASE_URL`. |
-| **Imaging** | Pillow | 13.x | Image processing, thumbnail generation, and metadata sanitization for item uploads. |
+| **Imaging** | Pillow | 13.x | Profile avatar validation (max 2MB, format validation) and future item image uploads. |
 
 ---
 
-## 3. Application Responsibilities & User Model Timing
+## 3. Authentication & User Management Architecture (Phase 1)
 
-### 3.1. `apps/accounts` (Custom User Model Timing)
-- **Scope**: Identity and access management.
-- **Architectural Timing Decision (Phase 0.1)**:
-  - In Django, introducing `AUTH_USER_MODEL` after foreign keys or initial migrations exist is notoriously disruptive.
-  - To ensure stability, the foundational `CampusUser` model (subclassing `AbstractUser`) and its initial migration `accounts.0001_initial` are created in **Phase 0.1**.
-  - All standard Django apps (`admin`, `auth`, `sessions`) reference `accounts.CampusUser` from inception.
-  - Future Phase 1 implementations will add student profile attributes (`campus_id`, `department`, `role`, verification statuses) cleanly without breaking authentication schema dependencies.
+### 3.1. Role-Based Access Control (RBAC) Hierarchy
 
-### 3.2. `apps/items`
-- **Scope**: Core Lost & Found reporting and directory.
-- **Responsibilities**:
-  - CRUD operations for Lost and Found reports.
-  - Multi-category hierarchy (`Category`: Electronics, Cards, Books, etc.).
-  - Campus spatial tagging (`CampusLocation`: Building, Floor, Room).
-  - Image uploads and thumbnail generation via Pillow.
-  - Public search and filtering by date, status, category, and location.
+The platform defines three strictly segregated user tiers:
 
-### 3.3. `apps/matching`
-- **Scope**: Artificial intelligence and semantic matching engine.
-- **Responsibilities**:
-  - PostgreSQL extension initialization via `VectorExtension()` migration operation.
-  - Text embedding generation using `all-MiniLM-L6-v2` (384-dimensional dense vectors).
-  - Vector similarity calculation via pgvector cosine distance operator (`<=>`).
-  - Hybrid scoring pipeline integrating semantic text match with structured heuristics (category, location proximity, date proximity).
-  - Generation and storage of `PotentialMatch` candidate pairs.
+```mermaid
+graph TD
+    SUPER_ADMIN["Super Administrator (SUPER_ADMIN)<br>Full system access, admin provisioning, Django admin"]
+    ADMIN["Staff Administrator (ADMIN)<br>Moderation console, claim reviews, Django admin staff"]
+    STUDENT["Student (STUDENT)<br>Item reporting, search, claim filing, student portal"]
 
-### 3.4. `apps/claims`
-- **Scope**: Ownership dispute resolution and item reclamation.
-- **Responsibilities**:
-  - Claim submission workflow by students claiming lost belongings.
-  - Secure verification evidence collection (receipts, unique scratches, unlock passwords, serial numbers).
-  - Multi-step status state machine (`SUBMITTED`, `UNDER_REVIEW`, `APPROVED`, `REJECTED`, `COLLECTED`).
-  - Administrative audit logging and resolution notes.
+    SUPER_ADMIN -->|Inherits staff & provisions| ADMIN
+    ADMIN -->|Oversees items & claims of| STUDENT
+```
 
-### 3.5. `apps/notifications`
-- **Scope**: In-app and outbound communication.
-- **Responsibilities**:
-  - Delivery of automated match alerts when potential items are reported.
-  - Status updates on submitted claims.
-  - Campus security broadcasts regarding high-value lost items.
-  - In-app notification center with read/unread tracking.
+- **STUDENT**: The self-service tier. Created exclusively through student registration. Automatically assigned `role=STUDENT`, `is_staff=False`, `is_superuser=False`.
+- **ADMIN**: Operational staff (campus lost & found desk, security, facility leads). Can only be provisioned by a Super Admin via `/accounts/admin/provision/`. Automatically assigned `is_staff=True`, `is_superuser=False`.
+- **SUPER_ADMIN**: Complete system governance, staff provisioning, and full Django administrative access (`is_staff=True`, `is_superuser=True`).
 
-### 3.6. `apps/dashboard`
-- **Scope**: User and administrator analytics and command center.
-- **Responsibilities**:
-  - Student dashboard: active lost reports, found items submitted, and claim progress.
-  - Security / Admin console: item recovery rates, unresolved claim queues, inventory aging metrics.
+### 3.2. Authentication Flow & Security Mechanisms
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Campus User
+    participant Browser as Web Browser
+    participant Throttle as Cache Throttle
+    participant Backend as EmailOrUsername Backend
+    participant Dispatcher as Dashboard Dispatcher
+    participant Neon as Neon PostgreSQL
+
+    User->>Browser: Enters email/username & password
+    Browser->>Throttle: Check failed attempts (5 max / 15m window)
+    alt Rate Limited
+        Throttle-->>Browser: Lockout error (wait 15 min)
+    else Under Limit
+        Browser->>Backend: authenticate(email/username, password)
+        Backend->>Neon: Query user case-insensitively & verify hash
+        alt Invalid Credentials
+            Backend-->>Throttle: Record failed attempt
+            Backend-->>Browser: Error: Invalid credentials
+        else Deactivated Account
+            Backend-->>Browser: Error: Account deactivated
+        else Valid Credentials
+            Backend-->>Throttle: Reset failure counter
+            Backend-->>Browser: Establish session & issue CSRF cookie
+            Browser->>Dispatcher: Redirect to /dashboard/
+            Dispatcher-->>Browser: 302 Redirect to role dashboard (/student/, /admin/, /super-admin/)
+        end
+    end
+```
+
+### 3.3. Key Security Controls
+
+1. **Email Normalization & Case-Insensitive Auth**:
+   - `clean()` and `save()` on `CampusUser` systematically normalize email addresses to lowercase.
+   - `EmailOrUsernameModelBackend` queries using case-insensitive matching (`email__iexact` or `username__iexact`).
+
+2. **University Email Domain Gating**:
+   - Environment-driven configuration via `UNIVERSITY_EMAIL_DOMAINS` (default: `university.edu`).
+   - Self-service registration rejects any unauthorized external email domains.
+
+3. **Conditional Student ID Uniqueness**:
+   - `student_id` is required and enforced unique for students using a PostgreSQL conditional constraint:
+     `UniqueConstraint(fields=['student_id'], condition=Q(student_id__isnull=False) & ~Q(student_id=''))`.
+   - Admin accounts can leave `student_id` blank without triggering collision.
+
+4. **Brute-Force Lockout (Throttling)**:
+   - Evaluated by `apps.accounts.throttling`.
+   - Client IP + normalized identifier tracked in Django cache with a sliding 15-minute window.
+   - Account login locked after 5 consecutive failed attempts.
+
+5. **Strict Parameter Tamper Resistance**:
+   - `ProfileUpdateForm` explicitly restricts editable fields to `first_name`, `last_name`, `phone_number`, and `profile_picture`.
+   - Security-critical fields (`role`, `student_id`, `email`, `is_email_verified`, `is_staff`, `is_superuser`) cannot be modified through the profile view.
+
+6. **POST-Only Safe Logout**:
+   - User logout requires a valid POST request with an accompanying CSRF token.
+   - GET requests to `/accounts/logout/` are redirected safely to `home` without destroying the session.
 
 ---
 
-## 4. Database Architecture & Vector Strategy
+## 4. Application Directory & Module Structure
 
-### 4.1. Neon PostgreSQL Connection
-- Connecting through `DATABASE_URL` environment variable.
-- Connection URL format:
-  ```
-  postgresql://[user]:[password]@[endpoint].neon.tech/[dbname]?sslmode=require
-  ```
-- SSL (`sslmode=require`) is enforced for all Neon connections.
-- Credentials are strictly excluded from version control and logs.
-
-### 4.2. Vector Integration Strategy
-- Integrated via the `pgvector` Python library (`pgvector.django`).
-- The matching app maintains the database extension migration `apps/matching/migrations/0001_initial.py` which executes `VectorExtension()`.
-- Neon natively supports `CREATE EXTENSION IF NOT EXISTS vector;`.
-- Employs 384-dimensional dense vectors generated by the lightweight Sentence Transformer model `all-MiniLM-L6-v2`.
-- Indexing will leverage PostgreSQL HNSW (Hierarchical Navigable Small World) indices for sub-millisecond approximate nearest neighbor (ANN) retrieval.
+```
+campus_lost_found/
+    manage.py
+    config/
+        settings.py          # Unified settings, DB routing, auth backends, domain configs
+        urls.py              # Root router connecting apps
+        wsgi.py / asgi.py    # Deployment gateways
+    apps/
+        accounts/            # Identity, CampusUser, backends, forms, throttling, views
+            models.py
+            backends.py      # Case-insensitive email/username backend
+            throttling.py    # Sliding window brute-force lockout
+            permissions.py   # RBAC mixins and decorators
+            forms.py         # Registration, login, profile, admin provisioning
+            views.py         # Auth views (CBVs)
+            urls.py          # /accounts/*
+            tests.py         # 25+ automated unit tests
+        items/               # Future item reporting and catalog (Phase 2)
+        matching/            # Semantic pgvector engine (Phase 3)
+        claims/              # Ownership verification (Phase 4)
+        notifications/       # Notification delivery (Phase 5)
+        dashboard/           # Role dispatching and dashboards
+            views.py         # DashboardDispatcher, Student, Admin, SuperAdmin views
+            urls.py          # /dashboard/*
+            tests.py         # Dashboard role tests
+    templates/
+        base.html            # Global skeleton (Bootstrap 5, main.css)
+        components/          # navbar, footer, messages
+        accounts/            # register.html, login.html, profile.html, create_admin.html
+        dashboard/           # student.html, admin.html, super_admin.html
+    static/
+        css/main.css         # Navy theme design tokens
+        js/main.js           # Client interactions
+    docs/
+        ARCHITECTURE.md      # Architecture and security specifications
+        DATABASE_SCHEMA.md   # Model definitions and ER diagrams
+        DEVELOPMENT_LOG.md   # Mandatory development diagnostics log
+        IMPLEMENTATION_STATUS.md # Roadmaps and phase checklist
+```

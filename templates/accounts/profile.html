@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Profile — Campus Lost &amp; Found Hub{% endblock %}
+
+{% block content %}
+<section class="py-5" style="background-color: var(--bg-main); min-height: 85vh;">
+  <div class="container">
+    <div class="row g-4 justify-content-center">
+      
+      <!-- Left Column: User Summary & Read-only Details -->
+      <div class="col-lg-4 col-md-5">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+          <div class="p-4 text-center text-white" style="background: linear-gradient(135deg, var(--navy-primary) 0%, var(--navy-light) 100%);">
+            <div class="position-relative d-inline-block mb-3">
+              {% if user.profile_picture %}
+                <img src="{{ user.profile_picture.url }}" alt="{{ user.get_full_name }}" class="rounded-circle border border-3 border-white shadow-sm" width="110" height="110" style="object-fit: cover;">
+              {% else %}
+                <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center shadow-sm mx-auto" style="width: 110px; height: 110px; font-size: 3rem;">
+                  <i class="bi bi-person-fill text-muted"></i>
+                </div>
+              {% endif %}
+            </div>
+            <h5 class="fw-bold mb-1">{{ user.get_full_name|default:user.username }}</h5>
+            <div class="mb-2">
+              <span class="badge {% if user.role == 'SUPER_ADMIN' %}bg-danger{% elif user.role == 'ADMIN' %}bg-warning text-dark{% else %}bg-primary{% endif %} rounded-pill px-3 py-1">
+                {{ user.get_role_display }}
+              </span>
+            </div>
+            <div class="text-white-50 small">{{ user.email }}</div>
+          </div>
+
+          <div class="card-body p-4">
+            <h6 class="fw-bold text-dark text-uppercase small mb-3" style="letter-spacing: 0.05em;">Account Information</h6>
+            
+            <ul class="list-group list-group-flush small">
+              <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-2 border-bottom">
+                <span class="text-muted"><i class="bi bi-shield-lock me-2"></i>Account Role</span>
+                <span class="fw-semibold">{{ user.get_role_display }}</span>
+              </li>
+              {% if user.student_id %}
+                <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-2 border-bottom">
+                  <span class="text-muted"><i class="bi bi-card-text me-2"></i>Student ID</span>
+                  <span class="fw-semibold font-monospace">{{ user.student_id }}</span>
+                </li>
+              {% endif %}
+              <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-2 border-bottom">
+                <span class="text-muted"><i class="bi bi-patch-check me-2"></i>Email Status</span>
+                {% if user.is_email_verified %}
+                  <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">Verified</span>
+                {% else %}
+                  <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill">Pending Verification</span>
+                {% endif %}
+              </li>
+              <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-2 border-bottom">
+                <span class="text-muted"><i class="bi bi-calendar-event me-2"></i>Member Since</span>
+                <span class="fw-semibold">{{ user.created_at|date:"M d, Y" }}</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
+                <span class="text-muted"><i class="bi bi-clock-history me-2"></i>Last Updated</span>
+                <span class="fw-semibold">{{ user.updated_at|date:"M d, Y H:i" }}</span>
+              </li>
+            </ul>
+
+            <div class="mt-4 pt-2">
+              <a href="{% url 'dashboard:index' %}" class="btn btn-outline-primary w-100 btn-sm rounded-pill">
+                <i class="bi bi-speedometer2 me-1"></i> Go to Dashboard
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Profile Edit Form -->
+      <div class="col-lg-7 col-md-7">
+        <div class="card border-0 shadow-sm rounded-4">
+          <div class="card-header bg-white border-bottom p-4">
+            <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-person-gear me-2 text-primary"></i>Edit Profile</h5>
+            <small class="text-muted">Update your public name, contact details, and avatar</small>
+          </div>
+
+          <div class="card-body p-4">
+            
+            {% if form.non_field_errors %}
+              <div class="alert alert-danger border-0 rounded-3 mb-4" role="alert">
+                {% for error in form.non_field_errors %}
+                  <div class="small"><i class="bi bi-exclamation-triangle-fill me-2"></i>{{ error }}</div>
+                {% endfor %}
+              </div>
+            {% endif %}
+
+            <form method="post" action="{% url 'accounts:profile' %}" enctype="multipart/form-data" novalidate>
+              {% csrf_token %}
+
+              <div class="row g-3">
+                
+                <!-- First Name -->
+                <div class="col-sm-6">
+                  <label for="{{ form.first_name.id_for_label }}" class="form-label fw-semibold text-secondary small">First Name</label>
+                  <input type="text" name="first_name" id="{{ form.first_name.id_for_label }}" 
+                         class="form-control {% if form.first_name.errors %}is-invalid{% endif %}" 
+                         value="{{ form.first_name.value|default:user.first_name }}" required>
+                  {% if form.first_name.errors %}
+                    <div class="text-danger small mt-1">{{ form.first_name.errors.0 }}</div>
+                  {% endif %}
+                </div>
+
+                <!-- Last Name -->
+                <div class="col-sm-6">
+                  <label for="{{ form.last_name.id_for_label }}" class="form-label fw-semibold text-secondary small">Last Name</label>
+                  <input type="text" name="last_name" id="{{ form.last_name.id_for_label }}" 
+                         class="form-control {% if form.last_name.errors %}is-invalid{% endif %}" 
+                         value="{{ form.last_name.value|default:user.last_name }}" required>
+                  {% if form.last_name.errors %}
+                    <div class="text-danger small mt-1">{{ form.last_name.errors.0 }}</div>
+                  {% endif %}
+                </div>
+
+                <!-- University Email (Read Only) -->
+                <div class="col-12">
+                  <label class="form-label fw-semibold text-secondary small">
+                    University Email <span class="badge bg-light text-muted border ms-1">Protected</span>
+                  </label>
+                  <div class="input-group">
+                    <span class="input-group-text bg-light text-muted"><i class="bi bi-lock-fill"></i></span>
+                    <input type="text" class="form-control bg-light text-muted" value="{{ user.email }}" readonly disabled>
+                  </div>
+                  <div class="form-text small text-muted">Primary email is managed by your university authentication profile and cannot be changed.</div>
+                </div>
+
+                <!-- Student ID (Read Only if student) -->
+                {% if user.student_id %}
+                  <div class="col-12">
+                    <label class="form-label fw-semibold text-secondary small">
+                      Student Registration Number <span class="badge bg-light text-muted border ms-1">Protected</span>
+                    </label>
+                    <div class="input-group">
+                      <span class="input-group-text bg-light text-muted"><i class="bi bi-lock-fill"></i></span>
+                      <input type="text" class="form-control bg-light text-muted font-monospace" value="{{ user.student_id }}" readonly disabled>
+                    </div>
+                    <div class="form-text small text-muted">Student registration numbers are locked to ensure claim verification integrity.</div>
+                  </div>
+                {% endif %}
+
+                <!-- Phone Number -->
+                <div class="col-12">
+                  <label for="{{ form.phone_number.id_for_label }}" class="form-label fw-semibold text-secondary small">Phone Number</label>
+                  <input type="tel" name="phone_number" id="{{ form.phone_number.id_for_label }}" 
+                         class="form-control {% if form.phone_number.errors %}is-invalid{% endif %}" 
+                         placeholder="+91 98765 43210" value="{{ form.phone_number.value|default:user.phone_number }}">
+                  {% if form.phone_number.errors %}
+                    <div class="text-danger small mt-1">{{ form.phone_number.errors.0 }}</div>
+                  {% else %}
+                    <div class="form-text small text-muted">Optional contact number used for campus recovery notifications.</div>
+                  {% endif %}
+                </div>
+
+                <!-- Profile Picture -->
+                <div class="col-12">
+                  <label for="{{ form.profile_picture.id_for_label }}" class="form-label fw-semibold text-secondary small">Profile Picture</label>
+                  <input type="file" name="profile_picture" id="{{ form.profile_picture.id_for_label }}" 
+                         class="form-control {% if form.profile_picture.errors %}is-invalid{% endif %}" 
+                         accept="image/jpeg,image/png,image/webp">
+                  {% if form.profile_picture.errors %}
+                    <div class="text-danger small mt-1">{{ form.profile_picture.errors.0 }}</div>
+                  {% else %}
+                    <div class="form-text small text-muted">Accepted formats: JPG, PNG, WEBP. Maximum file size: 2 MB.</div>
+                  {% endif %}
+                </div>
+
+                <!-- Submit Button -->
+                <div class="col-12 mt-4 pt-2">
+                  <button type="submit" class="btn btn-primary px-4 py-2 fw-semibold rounded-3 shadow-sm" style="background-color: var(--navy-primary); border-color: var(--navy-primary);">
+                    <i class="bi bi-check2-circle me-1"></i> Save Profile Changes
+                  </button>
+                </div>
+
+              </div>
+            </form>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+{% endblock %}
