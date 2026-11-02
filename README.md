@@ -4,7 +4,7 @@
 [![PostgreSQL](https://img.shields.io/badge/Neon%20PostgreSQL-Cloud-00E599?style=for-the-badge&logo=postgresql&logoColor=white)](https://neon.tech/)
 [![pgvector](https://img.shields.io/badge/pgvector-Enabled-336791?style=for-the-badge)](https://github.com/pgvector/pgvector)
 [![Bootstrap 5](https://img.shields.io/badge/Bootstrap-5.3-7952B3?style=for-the-badge&logo=bootstrap&logoColor=white)](https://getbootstrap.com/)
-[![Phase 2 Status](https://img.shields.io/badge/Phase%202-COMPLETED-success?style=for-the-badge)](#)
+[![Phase 2 & 2.1 Status](https://img.shields.io/badge/Phase%202%20%26%202.1-AUDITED%20%26%20VERIFIED-success?style=for-the-badge)](#)
 
 A centralized university platform engineered to reunite students, faculty, and campus staff with misplaced belongings through automated cataloging, verified ownership claims, and an AI semantic matching engine powered by Sentence Transformers and Neon PostgreSQL `pgvector`.
 
@@ -125,22 +125,31 @@ ALLOWED_HOSTS=localhost,127.0.0.1
 UNIVERSITY_EMAIL_DOMAINS=university.edu,campus.ac.in
 ```
 
-### 3.5. Run Migrations & System Checks
+### 3.5. Run Migrations & Seed Initial Data
 ```bash
 # Run Django system checks
 python manage.py check
 
 # Apply database migrations
 python manage.py migrate
+
+# Seed standard campus categories and locations (idempotent)
+python manage.py seed_initial_data
 ```
 
-### 3.6. Run Automated Test Suite
+### 3.6. Bootstrap Super Administrator
+Promote an existing registered user to Super Administrator safely without hardcoded passwords:
+```bash
+python manage.py assign_super_admin admin@university.edu
+```
+
+### 3.7. Run Automated Test Suite
 ```bash
 python manage.py test apps config
 ```
-*All 62 test cases pass with status `OK` (0 failures, 0 errors across accounts, items, and dashboard).*
+*All 76 test cases pass with status `OK` (0 failures, 0 errors across accounts, items, dashboard, and config).*
 
-### 3.7. Start the Development Server
+### 3.8. Start the Development Server
 ```bash
 python manage.py runserver
 ```

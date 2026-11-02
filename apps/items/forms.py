@@ -235,3 +235,12 @@ class ItemStatusUpdateForm(forms.ModelForm):
     class Meta:
         model = Item
         fields = ("status",)
+
+    def clean_status(self):
+        new_status = self.cleaned_data.get("status")
+        if self.instance and self.instance.pk:
+            if not self.instance.can_transition_to(new_status):
+                raise ValidationError(
+                    f"Cannot transition item from '{self.instance.get_status_display()}' to '{dict(Item.ItemStatus.choices).get(new_status, new_status)}'."
+                )
+        return new_status

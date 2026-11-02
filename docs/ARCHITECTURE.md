@@ -165,6 +165,14 @@ stateDiagram-v2
 - **RESOLVED**: Belonging successfully returned to owner. Automatically excluded from default public catalog.
 - **CLOSED**: Report withdrawn or archived without match. Automatically excluded from default public catalog.
 
+#### Allowed Operational Transitions
+The system enforces strict transition validation via `Item.VALID_STATUS_TRANSITIONS` and `can_transition_to()`:
+- `OPEN` $\rightarrow$ `CLAIM_PENDING`, `RESOLVED`, `CLOSED`.
+- `CLAIM_PENDING` $\rightarrow$ `OPEN`, `RESOLVED`, `CLOSED`.
+- `RESOLVED` $\rightarrow$ `OPEN` (reopened by administrator), `CLOSED`.
+- `CLOSED` $\rightarrow$ `OPEN` (reopened by administrator).
+- Illegal transitions (such as `CLOSED` directly to `CLAIM_PENDING` or `RESOLVED`) are rejected with `ValidationError`.
+
 ### 4.2. Reporting Pipeline & Tamper-Proof Ingestion
 - **Separate Dedicated Entrypoints**:
   - `/items/report/lost/` (`ReportLostItemView`): Pre-sets `item_type=LOST`.
@@ -215,6 +223,15 @@ stateDiagram-v2
   - `DELETE /api/v1/items/<uuid:pk>/`: Owner-restricted deletion.
   - `GET /api/v1/categories/`: Active categories listing.
   - `GET /api/v1/locations/`: Active locations listing.
+
+### 4.7. System Bootstrapping & Administrative CLI
+- **Super Administrator Elevation** (`python manage.py assign_super_admin <email|username>`):
+  - Promotes an existing user to `role=SUPER_ADMIN`, `is_staff=True`, `is_superuser=True`.
+  - Strictly requires an existing account identifier (does not handle or generate default passwords).
+  - Prompts for interactive confirmation (or accepts `--no-input` for scripted pipelines).
+- **Foundational Data Seeding** (`python manage.py seed_initial_data`):
+  - Idempotently populates standard university item categories and campus recovery locations using `get_or_create`.
+  - Supports `--dry-run` to inspect data population without committing changes.
 
 ---
 

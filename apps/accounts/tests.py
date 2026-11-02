@@ -6,6 +6,7 @@ from PIL import Image
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.management import CommandError, call_command
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
@@ -448,3 +449,47 @@ class AdminProvisioningTests(TestCase):
         self.assertTrue(admin_user.is_staff)
         self.assertFalse(admin_user.is_superuser)
         self.assertTrue(admin_user.check_password("StaffPassword123!"))
+
+
+class AssignSuperAdminCommandTests(TestCase):
+    """Test the assign_super_admin management command."""
+
+    def setUp(self):
+        self.student = CampusUser.objects.create_user(
+            username="student_to_promote",
+            email="promoteme@university.edu",
+            password="SecurePassword123!",
+            role=CampusUser.Role.STUDENT,
+        )
+
+    def test_assign_super_admin_by_email(self):
+        out = io.StringIO()
+        call_command("assign_super_admin", "promoteme@university.edu", noinput=True, stdout=out)
+        self.assertIn("Successfully elevated", out.getvalue())
+        self.student.refresh_from_db()
+        self.assertEqual(self.student.role, CampusUser.Role.SUPER_ADMIN)
+        self.assertTrue(self.student.is_staff)
+        self.assertTrue(self.student.is_superuser)
+        self.assertTrue(self.student.is_super_admin)
+
+    def test_assign_super_admin_by_username(self):
+        out = io.StringIO()
+        call_command("assign_super_admin", "student_to_promote", noinput=True, stdout=out)
+        self.assertIn("Successfully elevated", out.getvalue())
+        self.student.refresh_from_db()
+        self.assertEqual(self.student.role, CampusUser.Role.SUPER_ADMIN)
+
+    def test_assign_super_admin_nonexistent_user_fails(self):
+        with self.assertRaises(CommandError) as ctx:
+            call_command("assign_super_admin", "nonexistent@university.edu", noinput=True)
+        self.assertIn("No CampusUser account found", str(ctx.exception))
+
+    def test_assign_super_admin_already_super_admin(self):
+        self.student.role = CampusUser.Role.SUPER_ADMIN
+        self.student.is_staff = True
+        self.student.is_superuser = True
+        self.student.save()
+
+        out = io.StringIO()
+        call_command("assign_super_admin", self.student.email, noinput=True, stdout=out)
+        self.assertIn("is already a configured Super Administrator", out.getvalue())

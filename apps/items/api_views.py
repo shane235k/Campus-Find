@@ -1,4 +1,5 @@
 """REST API views for items, categories, and locations."""
+from django.db import transaction
 from django.db.models import Q
 from rest_framework import generics, permissions
 from rest_framework.response import Response
@@ -68,6 +69,13 @@ class ItemListCreateAPIView(generics.ListCreateAPIView):
             else:
                 queryset = queryset.filter(location__name__iexact=location_id)
 
+        date_from = self.request.query_params.get("date_from", "").strip() or self.request.query_params.get("start_date", "").strip()
+        date_to = self.request.query_params.get("date_to", "").strip() or self.request.query_params.get("end_date", "").strip()
+        if date_from:
+            queryset = queryset.filter(date_lost_or_found__gte=date_from)
+        if date_to:
+            queryset = queryset.filter(date_lost_or_found__lte=date_to)
+
         if status in [s[0] for s in Item.ItemStatus.choices]:
             queryset = queryset.filter(status=status)
         else:
@@ -88,9 +96,12 @@ class ItemRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsOwnerOrAdmin]
 
     def perform_destroy(self, instance):
-        if instance.image:
+        image = instance.image
+        with transaction.atomic():
+            super().perform_destroy(instance)
+        if image:
             try:
-                instance.image.delete(save=False)
+                image.delete(save=False)
             except Exception:
                 pass
-        super().perform_destroy(instance)
+

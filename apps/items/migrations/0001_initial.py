@@ -14,6 +14,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+        ('accounts', '0002_campususer_created_at_campususer_is_email_verified_and_more'),
     ]
 
     operations = [

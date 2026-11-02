@@ -16,3 +16,4 @@ class IsOwnerOrAdmin(permissions.BasePermission):
         is_owner = obj.reported_by_id == request.user.pk
         is_admin = getattr(request.user, "is_admin_user", False)
         return is_owner or is_admin
+

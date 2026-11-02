@@ -106,11 +106,22 @@
 #### Update Item
 - **Endpoint**: `PUT /api/v1/items/<uuid:pk>/` or `PATCH /api/v1/items/<uuid:pk>/`
 - **Permissions**: Report Owner or Administrator (`IsOwnerOrAdmin`)
-- **Response**: `200 OK` or `403 Forbidden` for non-owners.
+- **Validation & Business Rules**:
+  - `item_type` (`LOST`/`FOUND`) is immutable once created. Any attempt to modify `item_type` returns `400 Bad Request`.
+  - `status` is read-only for standard users/owners. Submitting a `status` change as a regular student is rejected / ignored.
+  - For Administrators, `status` changes must follow valid state machine transitions:
+    - `OPEN` $\rightarrow$ `CLAIM_PENDING`, `RESOLVED`, `CLOSED`
+    - `CLAIM_PENDING` $\rightarrow$ `OPEN`, `RESOLVED`, `CLOSED`
+    - `RESOLVED` $\rightarrow$ `OPEN` (reopen), `CLOSED`
+    - `CLOSED` $\rightarrow$ `OPEN` (reopen)
+    - Any invalid transition (e.g., `CLOSED` $\rightarrow$ `CLAIM_PENDING`) returns `400 Bad Request`.
+  - `reported_by` cannot be modified.
+- **Response**: `200 OK` or `403 Forbidden` for non-owners, `400 Bad Request` on invalid transitions/immutable fields.
 
 #### Delete Item
 - **Endpoint**: `DELETE /api/v1/items/<uuid:pk>/`
 - **Permissions**: Report Owner or Administrator (`IsOwnerOrAdmin`)
+- **Safety Mechanism**: Database record deletion is executed inside an atomic transaction (`transaction.atomic()`). Associated media images are safely unlinked from disk only after database deletion succeeds.
 - **Response**: `204 No Content` or `403 Forbidden` for non-owners.
 
 ---

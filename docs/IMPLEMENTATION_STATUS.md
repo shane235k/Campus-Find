@@ -8,6 +8,7 @@
 | **Phase 0.1** | **Database Migration to Neon & Custom User Model Setup** | **COMPLETED** | Completed |
 | **Phase 1** | **Authentication & User Management** | **COMPLETED** | Completed |
 | **Phase 2** | **Lost & Found Core (Reporting, Items, Images)** | **COMPLETED** (Migrations Deferred: Network) | Phase 2 Milestone |
+| **Phase 2.1** | **Lost & Found Core Security, Integrity & Workflow Audit** | **COMPLETED** | Phase 2.1 Milestone |
 | **Phase 3** | **Intelligent Matching Engine (Sentence Transformers & pgvector)**| **NOT STARTED** | Phase 3 Milestone |
 | **Phase 4** | **Ownership Claims & Administrative Verification** | **NOT STARTED** | Phase 4 Milestone |
 | **Phase 5** | **Dashboards, Notifications & Live Telemetry** | **NOT STARTED** | Phase 5 Milestone |
@@ -117,7 +118,34 @@
 
 ---
 
-## 4. Deliberately Deferred Scope
+## 4. Phase 2.1 Audit & Hardening Checklist
+
+- [x] **REST API Security Audit & Hardening**:
+  - Verified no sensitive student information (`email`, `phone_number`, `student_id`) is exposed in any API serializer or view.
+  - Enforced `status.read_only = True` for non-administrative users in `ItemSerializer`.
+  - Enforced immutability of `item_type` (`LOST`/`FOUND`) once created; rejects changes with HTTP 400.
+  - Implemented date range filtering (`start_date`/`date_from`, `end_date`/`date_to`) in `ItemListCreateAPIView`.
+  - Enforced transactional database deletion prior to media image unlinking in `ItemRetrieveUpdateDestroyAPIView`.
+- [x] **Status Management & State Machine**:
+  - Implemented `VALID_STATUS_TRANSITIONS` state machine on `Item` model with `can_transition_to(new_status)`.
+  - Added transition validation in `ItemStatusUpdateForm` and `ItemSerializer.validate_status()`.
+  - Enforced strictly POST-only execution on `ItemStatusUpdateView`.
+- [x] **Initial Data & Super Admin Bootstrap**:
+  - Implemented `python manage.py assign_super_admin <email|username>` command with strict non-interactive and interactive support, zero password exposure, and database persistence.
+  - Implemented `python manage.py seed_initial_data` command to seed 8 campus categories and 7 campus locations idempotently with `--dry-run` flag support.
+- [x] **Image Storage & Filesystem Safety**:
+  - Audited Pillow format verification (JPEG, PNG, WEBP) and 5MB size limit.
+  - Wrapped `ItemDeleteView` deletion in `transaction.atomic()` prior to media disk unlinking.
+- [x] **Migration Consistency**:
+  - Added explicit dependency `('accounts', '0002_campususer_created_at_campususer_is_email_verified_and_more')` to `apps/items/migrations/0001_initial.py`.
+  - Verified migration graph consistency with `makemigrations --check --dry-run` (0 changes detected, 0 conflicts).
+- [x] **Automated Test Suite Expansion**:
+  - Expanded test suite from 62 to 76 tests (14 new audit-hardening tests).
+  - All 76 tests pass with status `OK` (0 failures, 0 errors across accounts, items, dashboard, and config).
+
+---
+
+## 5. Deliberately Deferred Scope
 
 - **Phase 2**: `Item`, `Category`, `CampusLocation`, and `ItemImage` models; item reporting forms, Pillow image thumbnails, and directory search filters.
 - **Phase 3**: Sentence Transformers model inference (`all-MiniLM-L6-v2`), 384-dim vector generation, and nearest-neighbor cosine similarity queries.

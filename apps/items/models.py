@@ -85,6 +85,14 @@ class Item(models.Model):
         RESOLVED = "RESOLVED", "Resolved"
         CLOSED = "CLOSED", "Closed"
 
+    # Explicit allowed operational status transitions
+    VALID_STATUS_TRANSITIONS = {
+        "OPEN": {"OPEN", "CLAIM_PENDING", "RESOLVED", "CLOSED"},
+        "CLAIM_PENDING": {"CLAIM_PENDING", "OPEN", "RESOLVED", "CLOSED"},
+        "RESOLVED": {"RESOLVED", "OPEN", "CLOSED"},
+        "CLOSED": {"CLOSED", "OPEN"},
+    }
+
     id = models.UUIDField(
         primary_key=True,
         default=uuid.uuid4,
@@ -163,6 +171,11 @@ class Item(models.Model):
 
     def get_absolute_url(self):
         return reverse("items:detail", kwargs={"pk": self.pk})
+
+    def can_transition_to(self, new_status):
+        """Check whether transition from current status to new_status is allowed."""
+        allowed = self.VALID_STATUS_TRANSITIONS.get(self.status, {self.status})
+        return new_status in allowed
 
     @property
     def is_lost(self):

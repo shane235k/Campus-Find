@@ -21,6 +21,7 @@ from PIL import Image
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.management import call_command
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from rest_framework import status
@@ -431,6 +432,31 @@ class ItemPermissionsAndSecurityTests(TestCase):
         )
         self.assertEqual(response.status_code, 403)
 
+    def test_invalid_status_transition_rejected(self):
+        self.client.login(username="staffadmin", password="SecurePassword123!")
+        # Set item directly to CLOSED
+        self.item.status = Item.ItemStatus.CLOSED
+        self.item.save()
+
+        # Attempt illegal transition CLOSED -> CLAIM_PENDING
+        response = self.client.post(
+            reverse("items:update_status", kwargs={"pk": self.item.pk}),
+            {"status": Item.ItemStatus.CLAIM_PENDING},
+        )
+        self.assertEqual(response.status_code, 302)
+        self.item.refresh_from_db()
+        # Status remains CLOSED
+        self.assertEqual(self.item.status, Item.ItemStatus.CLOSED)
+
+        # Attempt legal transition CLOSED -> OPEN
+        resp_reopen = self.client.post(
+            reverse("items:update_status", kwargs={"pk": self.item.pk}),
+            {"status": Item.ItemStatus.OPEN},
+        )
+        self.assertEqual(resp_reopen.status_code, 302)
+        self.item.refresh_from_db()
+        self.assertEqual(self.item.status, Item.ItemStatus.OPEN)
+
 
 @override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
 class ItemImageHandlingTests(TestCase):
@@ -648,6 +674,38 @@ class ItemApiTests(TestCase):
         self.item.refresh_from_db()
         self.assertEqual(self.item.title, "Updated Mouse Title")
 
+    def test_api_item_type_immutable_on_patch(self):
+        detail_url = reverse("api_v1:item-detail", kwargs={"pk": self.item.pk})
+        self.client.force_authenticate(user=self.user)
+        # Attempt to change LOST to FOUND
+        response = self.client.patch(detail_url, {"item_type": "FOUND"})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("item_type", response.data)
+        self.item.refresh_from_db()
+        self.assertEqual(self.item.item_type, Item.ItemType.LOST)
+
+    def test_api_date_range_filtering(self):
+        # Create an older item
+        Item.objects.create(
+            title="Old Calculator",
+            description="Found weeks ago",
+            item_type=Item.ItemType.FOUND,
+            category=self.category,
+            location=self.location,
+            date_lost_or_found=date.today() - timedelta(days=20),
+            reported_by=self.user,
+            status=Item.ItemStatus.OPEN,
+        )
+        # Filter for items within last 5 days
+        start = (date.today() - timedelta(days=5)).isoformat()
+        end = date.today().isoformat()
+        res = self.client.get(reverse("api_v1:item-list"), {"start_date": start, "end_date": end})
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        results = res.data.get("results", res.data)
+        # Only self.item was created today; the older one is excluded
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]["title"], "Wireless Mouse")
+
     def test_api_categories_and_locations_endpoints(self):
         res_cat = self.client.get(reverse("api_v1:category-list"))
         self.assertEqual(res_cat.status_code, status.HTTP_200_OK)
@@ -746,3 +804,37 @@ class DashboardAggregatesTests(TestCase):
         self.assertEqual(response.context["found_items"], 1)
         self.assertEqual(response.context["open_items"], 2)
         self.assertEqual(response.context["resolved_items"], 1)
+
+
+class SeedInitialDataCommandTests(TestCase):
+    """Test the seed_initial_data management command."""
+
+    def test_seed_command_populates_data_and_is_idempotent(self):
+        Category.objects.all().delete()
+        CampusLocation.objects.all().delete()
+
+        # Run first time
+        out = io.StringIO()
+        call_command("seed_initial_data", stdout=out)
+        self.assertIn("Seeding complete", out.getvalue())
+        self.assertGreater(Category.objects.count(), 0)
+        self.assertGreater(CampusLocation.objects.count(), 0)
+
+        initial_cat_count = Category.objects.count()
+        initial_loc_count = CampusLocation.objects.count()
+
+        # Run second time - should be completely idempotent
+        out2 = io.StringIO()
+        call_command("seed_initial_data", stdout=out2)
+        self.assertEqual(Category.objects.count(), initial_cat_count)
+        self.assertEqual(CampusLocation.objects.count(), initial_loc_count)
+
+    def test_seed_command_dry_run(self):
+        Category.objects.all().delete()
+        CampusLocation.objects.all().delete()
+
+        out = io.StringIO()
+        call_command("seed_initial_data", dry_run=True, stdout=out)
+        self.assertIn("[DRY RUN]", out.getvalue())
+        self.assertEqual(Category.objects.count(), 0)
+        self.assertEqual(CampusLocation.objects.count(), 0)

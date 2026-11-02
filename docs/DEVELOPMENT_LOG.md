@@ -195,7 +195,33 @@ This document enforces and maintains the **Mandatory Development Diagnostics Pol
 
 ---
 
-## 6. Phase Summary & Health Matrix
+---
+
+## 6. Phase 2.1 Audit & Hardening Log
+
+### Audit Findings & Security Hardening
+1. **Status Transition Validation**:
+   - *Finding*: Item status moderation permitted arbitrary transitions between choices.
+   - *Hardening*: Implemented `Item.VALID_STATUS_TRANSITIONS` and `can_transition_to()` state machine. Added `clean_status()` validation on `ItemStatusUpdateForm` and `validate_status()` on `ItemSerializer`.
+2. **Item Type Immutability**:
+   - *Finding*: Report type (`item_type`: `LOST` vs `FOUND`) was mutable on REST API PATCH requests.
+   - *Hardening*: Added `validate_item_type()` in `ItemSerializer` blocking modification of report type after creation.
+3. **API Date Range Filtering**:
+   - *Finding*: `ItemListCreateAPIView` lacked `start_date`/`date_from` and `end_date`/`date_to` parameters supported by the web listing.
+   - *Hardening*: Added date range bounding queries in `ItemListCreateAPIView.get_queryset`.
+4. **Super Admin Bootstrap**:
+   - *Finding*: No non-interactive or safe CLI command existed to promote existing users without modifying database directly.
+   - *Hardening*: Created `assign_super_admin` command requiring an explicit user email or username without handling or creating passwords.
+5. **Initial Data Seeding**:
+   - *Finding*: Foundational categories and locations required manual entry.
+   - *Hardening*: Created idempotent `seed_initial_data` management command.
+6. **Deletion File Cleanup Safety**:
+   - *Finding*: `ItemDeleteView` and `ItemRetrieveUpdateDestroyAPIView` deleted media files prior to database instance deletion.
+   - *Hardening*: Wrapped database deletion in an atomic transaction; file unlinking only proceeds after successful database commit.
+
+---
+
+## 7. Phase Summary & Health Matrix
 
 | Phase | Total Failures | Network | Database | Application | Environment | Unresolved | Status |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -203,6 +229,7 @@ This document enforces and maintains the **Mandatory Development Diagnostics Pol
 | **Phase 0.1** | 2 | 1 | 1 | 0 | 0 | 0 | **RESOLVED** |
 | **Phase 1** | 2 | 1 | 0 | 1 | 0 | 0 | **RESOLVED** |
 | **Phase 2** | 1 | 0 | 0 | 0 | 1 | 0 | **RESOLVED** |
+| **Phase 2.1** | 0 | 0 | 0 | 0 | 0 | 0 | **RESOLVED** |
 
 ### Current Environment Diagnostics
 - **Primary Database**: Neon Cloud PostgreSQL 18.6 (fd34222) on aarch64-unknown-linux-gnu (configured in `.env` via `DATABASE_URL`).
@@ -211,7 +238,7 @@ This document enforces and maintains the **Mandatory Development Diagnostics Pol
 - **Offline Migration State**:
   - `accounts.0001_initial`: Applied on database.
   - `accounts.0002_campususer_created_at_campususer_is_email_verified_and_more`: Generated on disk.
-  - `items.0001_initial`: Generated on disk (proper dependency on `accounts.0002`).
+  - `items.0001_initial`: Generated on disk (explicit linear dependency on `accounts.0002`).
 - **System Check Status**: Clean (`0 issues identified`).
-- **Automated Test Suite**: 62/62 tests passing (0 failures, 0 errors across accounts, items, and dashboard).
+- **Automated Test Suite**: 76/76 tests passing (0 failures, 0 errors across accounts, items, dashboard, and config).
 - **Unresolved Issues**: Live Neon connection pending unrestricted network (offline development completely green).

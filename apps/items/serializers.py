@@ -41,7 +41,34 @@ class ItemSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         )
-        read_only_fields = ("id", "status", "reporter_display_name", "created_at", "updated_at")
+        read_only_fields = ("id", "reporter_display_name", "created_at", "updated_at")
+
+    def get_fields(self):
+        fields = super().get_fields()
+        request = self.context.get("request")
+        is_admin = bool(
+            request
+            and request.user
+            and request.user.is_authenticated
+            and getattr(request.user, "is_admin_user", False)
+        )
+        # Non-administrators can NEVER modify status
+        if not is_admin:
+            fields["status"].read_only = True
+        return fields
+
+    def validate_item_type(self, value):
+        if self.instance and self.instance.item_type != value:
+            raise serializers.ValidationError("Item report type (LOST/FOUND) cannot be changed once created.")
+        return value
+
+    def validate_status(self, value):
+        if self.instance:
+            if not self.instance.can_transition_to(value):
+                raise serializers.ValidationError(
+                    f"Cannot transition item from '{self.instance.get_status_display()}' to '{value}'."
+                )
+        return value
 
     def validate_category(self, value):
         if not value.is_active:
@@ -69,3 +96,4 @@ class ItemSerializer(serializers.ModelSerializer):
         validated_data["reported_by"] = user
         validated_data["status"] = Item.ItemStatus.OPEN
         return super().create(validated_data)
+

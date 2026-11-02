@@ -3,6 +3,7 @@ import logging
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
+from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
@@ -252,15 +253,19 @@ class ItemDeleteView(LoginRequiredMixin, View):
             logger.warning("Unauthorized delete attempt on item %s by %s", item.id, user.email)
             raise PermissionDenied("You do not have permission to delete this report.")
 
-        # Clean up uploaded media file if it exists
-        if item.image:
-            try:
-                item.image.delete(save=False)
-            except Exception as exc:
-                logger.error("Failed to delete media for item %s: %s", item.id, exc)
-
         item_title = item.title
-        item.delete()
+        image_to_delete = item.image
+
+        with transaction.atomic():
+            item.delete()
+
+        # Clean up uploaded media file after successful database deletion
+        if image_to_delete:
+            try:
+                image_to_delete.delete(save=False)
+            except Exception as exc:
+                logger.error("Failed to delete media for item %s: %s", pk, exc)
+
         messages.success(request, f"Report '{item_title}' has been deleted successfully.")
         logger.info("Item %s deleted by %s", pk, user.email)
 
@@ -272,6 +277,8 @@ class ItemDeleteView(LoginRequiredMixin, View):
 
 class ItemStatusUpdateView(AdminRequiredMixin, View):
     """Admin-only view to update the operational status of an item report."""
+
+    http_method_names = ["post"]
 
     def post(self, request, pk, *args, **kwargs):
         item = get_object_or_404(Item, pk=pk)
@@ -289,5 +296,6 @@ class ItemStatusUpdateView(AdminRequiredMixin, View):
                 request.user.email,
             )
         else:
-            messages.error(request, "Invalid status choice selected.")
+            error_msg = form.errors.get("status", ["Invalid status choice or transition selected."])[0]
+            messages.error(request, error_msg)
         return redirect(item.get_absolute_url())
