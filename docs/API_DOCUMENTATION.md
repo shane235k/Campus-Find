@@ -28,9 +28,102 @@
 | `GET` | `/dashboard/admin/` | `dashboard:admin` | Operations console for lost & found desk moderators and security | Admin / Staff Role |
 | `GET` | `/dashboard/super-admin/`| `dashboard:super_admin` | System command center with user counts and staff provisioning access | Super Admin Role |
 
+### 2.3. Lost & Found Items (`/items/`) (Implemented in Phase 2)
+
+| Method | URL Pattern | View Name | Description | Access Control |
+| :--- | :--- | :--- | :--- | :--- |
+| `GET` | `/items/` | `items:list`, `items:index` | Public catalog browsing with keyword search, multi-field filters, and pagination | Public (Hides RESOLVED/CLOSED by default) |
+| `GET`, `POST` | `/items/report/lost/` | `items:report_lost` | Report lost belongings form with active category/location selection | Authenticated |
+| `GET`, `POST` | `/items/report/found/` | `items:report_found` | Report found item form with active category/location selection | Authenticated |
+| `GET` | `/items/<uuid:pk>/` | `items:detail` | Item detail view with safe reporter display name and action buttons | Public |
+| `GET`, `POST` | `/items/<uuid:pk>/edit/` | `items:edit` | Edit item report details or replace/remove photograph | Owner or Admin Only (403 for others) |
+| `POST` | `/items/<uuid:pk>/delete/` | `items:delete` | Strictly POST-only deletion of report with image disk cleanup | Owner or Admin Only (405 for GET, 403 for non-owners) |
+| `POST` | `/items/<uuid:pk>/status/` | `items:update_status` | Staff admin endpoint to advance report status | Staff Admin Only (403 for regular students) |
+
 ---
 
-## 3. Planned REST API Endpoints (`/api/v1/`)
+## 3. Active REST API Endpoints (`/api/v1/`) (Implemented in Phase 2)
+
+### 3.1. Items Endpoints (`/api/v1/items/`)
+
+#### List Items
+- **Endpoint**: `GET /api/v1/items/`
+- **Permissions**: Public (`AllowAny`)
+- **Query Parameters**:
+  - `q`: Search keyword across title and description.
+  - `type`: Filter by type (`LOST` or `FOUND`).
+  - `category`: Filter by category ID.
+  - `location`: Filter by location ID.
+  - `status`: Filter by status (`OPEN`, `CLAIM_PENDING`, `RESOLVED`, `CLOSED`). By default, `RESOLVED` and `CLOSED` items are hidden from public queries.
+  - `start_date` / `date_from`: Filter incident date $\ge$ start date (`YYYY-MM-DD`).
+  - `end_date` / `date_to`: Filter incident date $\le$ end date (`YYYY-MM-DD`).
+- **Response Format**:
+  ```json
+  [
+    {
+      "id": "7b0a7082-f54f-4d3f-9174-884ecb5a4ce2",
+      "title": "Silver Dell XPS 15",
+      "description": "Left on 2nd floor study carrel with stickers.",
+      "item_type": "LOST",
+      "category": 1,
+      "category_name": "Electronics",
+      "location": 2,
+      "location_name": "Main Library",
+      "date_lost_or_found": "2026-11-02",
+      "image": "/media/item_images/2026/11/a3c10f...jpg",
+      "status": "OPEN",
+      "reporter_display_name": "Jane Doe",
+      "created_at": "2026-11-02T18:45:00Z",
+      "updated_at": "2026-11-02T18:45:00Z"
+    }
+  ]
+  ```
+
+#### Create Item
+- **Endpoint**: `POST /api/v1/items/`
+- **Permissions**: Authenticated (`IsAuthenticated`)
+- **Request Body (JSON or Multipart Form)**:
+  ```json
+  {
+    "title": "Found Car Keys with Blue Lanyard",
+    "description": "Found near parking lot B entrance.",
+    "item_type": "FOUND",
+    "category": 3,
+    "location": 5,
+    "date_lost_or_found": "2026-11-02"
+  }
+  ```
+- **Behavior**:
+  - `reported_by` is automatically assigned to `request.user`.
+  - `status` is automatically assigned to `OPEN`.
+- **Response**: `201 Created` with created item payload.
+
+#### Retrieve Item
+- **Endpoint**: `GET /api/v1/items/<uuid:pk>/`
+- **Permissions**: Public (`AllowAny`)
+- **Response**: `200 OK`
+
+#### Update Item
+- **Endpoint**: `PUT /api/v1/items/<uuid:pk>/` or `PATCH /api/v1/items/<uuid:pk>/`
+- **Permissions**: Report Owner or Administrator (`IsOwnerOrAdmin`)
+- **Response**: `200 OK` or `403 Forbidden` for non-owners.
+
+#### Delete Item
+- **Endpoint**: `DELETE /api/v1/items/<uuid:pk>/`
+- **Permissions**: Report Owner or Administrator (`IsOwnerOrAdmin`)
+- **Response**: `204 No Content` or `403 Forbidden` for non-owners.
+
+---
+
+### 3.2. Categories & Locations Endpoints
+- **Endpoints**:
+  - `GET /api/v1/categories/`: Returns list of active categories (`id`, `name`, `description`, `is_active`).
+  - `GET /api/v1/locations/`: Returns list of active campus locations (`id`, `name`, `description`, `is_active`).
+- **Permissions**: Public (`AllowAny`)
+
+---
+
+## 4. Planned REST API Endpoints (Phases 3-5)
 
 ### 3.1. Base URL & Response Standard
 ```

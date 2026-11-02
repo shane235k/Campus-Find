@@ -157,19 +157,61 @@ This document enforces and maintains the **Mandatory Development Diagnostics Pol
 
 ---
 
-## 5. Phase Summary & Health Matrix
+---
+
+## 5. Phase 2 Diagnostic Incident Log (Lost & Found Core)
+
+### Network Environment Status & Deferred Migrations Directives
+- **Network Interface**: `Hostel Wi-Fi` (private subnet `10.36.75.164`).
+- **Port 5432 Status**: Outbound PostgreSQL traffic remains blocked by the institutional firewall.
+- **Compliance Action**: In strict compliance with the Phase 2 constraints:
+  - `python manage.py migrate` was NOT executed.
+  - No repeated connections were attempted against Neon.
+  - Schema migrations were generated offline via Django's `MigrationAutodetector` and validated on disk.
+  - Pending Migration Queue:
+    1. `apps/accounts/migrations/0002_campususer_created_at_campususer_is_email_verified_and_more.py`
+    2. `apps/items/migrations/0001_initial.py`
+  - Integration checks against the live Neon instance are classified as `BLOCKED — NETWORK` until outbound port 5432 is unblocked or an unrestricted network is connected.
+
+---
+
+### Incident INC-007: Windows Process File Sharing Violation on Replaced / Removed Media Files
+- **Timestamp**: `2026-11-02T21:18:48+05:30`
+- **Command**: `python manage.py test apps.items`
+- **Classification**: `ENVIRONMENT`
+- **Verified Failure**:
+  ```
+  Error deleting replaced image: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\...\item_images\2026\11\...\filename.png'
+  ```
+- **Diagnostic Breakdown**:
+  1. *OS File Locking*: On Windows (Win32 API `CreateFileW`), open file handles impose exclusive read/write sharing modes unless `FILE_SHARE_DELETE` is explicitly requested by every open descriptor.
+  2. *Descriptor Lifecycles*: When an existing item's image was replaced or cleared in `ItemEditForm`, Python's `FieldFile` and Pillow `Image.open` kept an open read descriptor.
+- **Suspected Cause**: Pillow or Django `FieldFile` leaving underlying open file descriptor on Windows filesystem during in-process form tests.
+- **Confirmed Root Cause**: Win32 file sharing lock prevented file deletion while Python held an uncollected file descriptor.
+- **Resolution**:
+  1. Updated `validate_item_image` in `apps/items/utils.py` to open Pillow images using a context manager (`with Image.open(image_file) as img:`) ensuring immediate descriptor cleanup.
+  2. Updated `ItemEditForm.save` in `apps/items/forms.py` to close any lingering `instance.image` handle and invoke garbage collection `gc.collect()` before deleting obsolete files via `storage.delete(filename)`.
+  3. Re-executed `python manage.py test apps.items`; all 32 tests completed with status `OK`.
+
+---
+
+## 6. Phase Summary & Health Matrix
 
 | Phase | Total Failures | Network | Database | Application | Environment | Unresolved | Status |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | **Phase 0** | 2 | 0 | 0 | 1 | 1 | 0 | **RESOLVED** |
 | **Phase 0.1** | 2 | 1 | 1 | 0 | 0 | 0 | **RESOLVED** |
 | **Phase 1** | 2 | 1 | 0 | 1 | 0 | 0 | **RESOLVED** |
+| **Phase 2** | 1 | 0 | 0 | 0 | 1 | 0 | **RESOLVED** |
 
 ### Current Environment Diagnostics
 - **Primary Database**: Neon Cloud PostgreSQL 18.6 (fd34222) on aarch64-unknown-linux-gnu (configured in `.env` via `DATABASE_URL`).
 - **pgvector State**: Active version `0.8.6` verified.
-- **User Model State**: `apps.accounts.models.CampusUser` fully extended with RBAC, conditional student ID uniqueness, profile attributes, and non-prompting timestamps.
-- **Migration State**: `0001_initial.py` applied; `0002_campususer_created_at_campususer_is_email_verified_and_more.py` generated on disk.
+- **Live Database Migrations**: `BLOCKED — NETWORK` (outbound port 5432 blocked on institutional network).
+- **Offline Migration State**:
+  - `accounts.0001_initial`: Applied on database.
+  - `accounts.0002_campususer_created_at_campususer_is_email_verified_and_more`: Generated on disk.
+  - `items.0001_initial`: Generated on disk (proper dependency on `accounts.0002`).
 - **System Check Status**: Clean (`0 issues identified`).
-- **Automated Test Suite**: 38/38 tests passing (0 failures, 0 errors).
-- **Unresolved Issues**: None.
+- **Automated Test Suite**: 62/62 tests passing (0 failures, 0 errors across accounts, items, and dashboard).
+- **Unresolved Issues**: Live Neon connection pending unrestricted network (offline development completely green).

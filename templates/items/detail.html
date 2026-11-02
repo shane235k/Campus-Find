@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ item.title }} — Campus Lost &amp; Found Hub{% endblock %}
+
+{% block content %}
+<section class="py-5" style="background-color: var(--bg-main); min-height: 85vh;">
+  <div class="container">
+    
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+      <ol class="breadcrumb small">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-decoration-none">Home</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'items:index' %}" class="text-decoration-none">Items Catalog</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ item.title }}</li>
+      </ol>
+    </nav>
+
+    <div class="row g-4">
+      
+      <!-- Left Column: Item Image & Key Badges -->
+      <div class="col-lg-5">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
+          <div class="position-relative bg-light" style="min-height: 320px; max-height: 420px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+            {% if item.image %}
+              <img src="{{ item.image.url }}" alt="{{ item.title }}" class="img-fluid w-100" style="object-fit: cover; max-height: 420px;">
+            {% else %}
+              <div class="text-center p-5 text-muted">
+                <i class="bi {% if item.is_lost %}bi-search{% else %}bi-box-seam{% endif %} display-1 opacity-25"></i>
+                <div class="mt-2 fw-semibold">No photograph uploaded</div>
+                <small class="text-muted">Descriptive marks provided in summary</small>
+              </div>
+            {% endif %}
+
+            <!-- Floating Type Badge -->
+            <div class="position-absolute top-0 start-0 m-3">
+              {% if item.is_lost %}
+                <span class="badge bg-danger shadow text-uppercase fw-bold px-3 py-2" style="font-size: 0.85rem;">
+                  <i class="bi bi-search me-1"></i> Lost Report
+                </span>
+              {% else %}
+                <span class="badge bg-success shadow text-uppercase fw-bold px-3 py-2" style="font-size: 0.85rem;">
+                  <i class="bi bi-box-seam me-1"></i> Found Report
+                </span>
+              {% endif %}
+            </div>
+
+            <!-- Floating Status Badge -->
+            <div class="position-absolute top-0 end-0 m-3">
+              {% if item.is_open %}
+                <span class="badge bg-primary shadow text-uppercase px-3 py-2" style="font-size: 0.85rem;">Open</span>
+              {% elif item.is_claim_pending %}
+                <span class="badge bg-warning text-dark shadow text-uppercase px-3 py-2" style="font-size: 0.85rem;">Claim Pending</span>
+              {% elif item.is_resolved %}
+                <span class="badge bg-success shadow text-uppercase px-3 py-2" style="font-size: 0.85rem;">Resolved</span>
+              {% elif item.is_closed %}
+                <span class="badge bg-secondary shadow text-uppercase px-3 py-2" style="font-size: 0.85rem;">Closed</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Metadata Quick List -->
+          <div class="card-body p-4 border-top">
+            <ul class="list-group list-group-flush small">
+              <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-2 border-bottom">
+                <span class="text-muted"><i class="bi bi-tag-fill me-2 text-primary"></i>Category</span>
+                <span class="fw-semibold text-dark">{{ item.category.name }}</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-2 border-bottom">
+                <span class="text-muted"><i class="bi bi-geo-alt-fill me-2 text-danger"></i>Campus Location</span>
+                <span class="fw-semibold text-dark">{{ item.location.name }}</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-2 border-bottom">
+                <span class="text-muted"><i class="bi bi-calendar-event me-2 text-info"></i>Date Lost / Found</span>
+                <span class="fw-semibold text-dark">{{ item.date_lost_or_found|date:"F d, Y" }}</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-2 border-bottom">
+                <span class="text-muted"><i class="bi bi-person-fill me-2 text-secondary"></i>Reported By</span>
+                <span class="fw-semibold text-dark">{{ item.reporter_display_name }}</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
+                <span class="text-muted"><i class="bi bi-clock-history me-2 text-muted"></i>Report Filed</span>
+                <span class="fw-semibold text-muted">{{ item.created_at|date:"M d, Y H:i" }}</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Admin Quick Status Moderation -->
+        {% if is_admin and status_form %}
+          <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+            <h6 class="fw-bold mb-3 text-dark"><i class="bi bi-shield-lock-fill me-2 text-warning"></i>Admin Status Moderation</h6>
+            <form method="post" action="{% url 'items:update_status' item.pk %}">
+              {% csrf_token %}
+              <div class="input-group">
+                {{ status_form.status }}
+                <button type="submit" class="btn btn-warning text-dark fw-semibold">
+                  Update
+                </button>
+              </div>
+              <small class="text-muted d-block mt-2">Adjust report workflow state across campus operations.</small>
+            </form>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Right Column: Full Narrative & Operational Actions -->
+      <div class="col-lg-7">
+        <div class="card border-0 shadow-sm rounded-4 bg-white p-4 p-md-5 mb-4">
+          
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <h3 class="fw-bold text-dark mb-0">{{ item.title }}</h3>
+          </div>
+
+          <div class="mb-4 pb-3 border-bottom text-muted small">
+            <span>Report ID: <code class="text-secondary font-monospace">{{ item.id }}</code></span>
+          </div>
+
+          <div class="mb-4">
+            <h6 class="fw-bold text-dark text-uppercase small" style="letter-spacing: 0.05em;">Detailed Description</h6>
+            <div class="p-3 bg-light rounded-3 text-secondary lh-lg" style="white-space: pre-wrap;">{{ item.description }}</div>
+          </div>
+
+          <!-- Future Phases Interactive Notice -->
+          {% if not can_manage %}
+            <div class="alert alert-info border-0 rounded-3 p-4 mb-4" style="background-color: #eff6ff; color: #1e40af;">
+              <div class="d-flex align-items-start gap-3">
+                <i class="bi bi-info-circle-fill fs-4 mt-1 text-primary"></i>
+                <div>
+                  <h6 class="fw-bold mb-1">
+                    {% if item.is_found %}
+                      Is this your misplaced belonging?
+                    {% else %}
+                      Did you find or spot this item?
+                    {% endif %}
+                  </h6>
+                  <p class="small mb-0">
+                    {% if item.is_found %}
+                      In <strong>Phase 4 (Claims &amp; Verification)</strong>, you will be able to file an ownership claim directly with the campus recovery desk by answering security questions or providing matching receipts.
+                    {% else %}
+                      In <strong>Phase 3 (Semantic Matching)</strong> and <strong>Phase 4 (Claims)</strong>, automated match alerts and finder notifications will connect finders with the reporting student.
+                    {% endif %}
+                  </p>
+                </div>
+              </div>
+            </div>
+          {% endif %}
+
+          <!-- Action Controls for Report Owner or Admin -->
+          {% if can_manage %}
+            <div class="p-3 rounded-3 border bg-light mt-4">
+              <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div>
+                  <div class="fw-bold text-dark small"><i class="bi bi-gear-fill me-1 text-primary"></i>Report Management</div>
+                  <div class="text-muted small">You have authorized permissions to modify or withdraw this report.</div>
+                </div>
+                <div class="d-flex gap-2">
+                  <a href="{% url 'items:edit' item.pk %}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                    <i class="bi bi-pencil-square me-1"></i> Edit Report
+                  </a>
+                  <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                    <i class="bi bi-trash3 me-1"></i> Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Delete Confirmation Modal -->
+            <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+              <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 rounded-4 shadow">
+                  <div class="modal-header border-bottom p-4">
+                    <h5 class="modal-title fw-bold text-danger" id="deleteModalLabel">
+                      <i class="bi bi-exclamation-triangle-fill me-2"></i>Confirm Report Deletion
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body p-4">
+                    <p class="mb-2 text-dark">Are you sure you want to permanently delete this report?</p>
+                    <p class="fw-bold mb-3 text-secondary">"{{ item.title }}"</p>
+                    <p class="small text-muted mb-0">This action cannot be undone. Associated photos will be permanently cleared from campus storage.</p>
+                  </div>
+                  <div class="modal-footer border-top p-3 bg-light">
+                    <button type="button" class="btn btn-secondary btn-sm rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                    <form method="post" action="{% url 'items:delete' item.pk %}">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-danger btn-sm rounded-pill px-3">
+                        <i class="bi bi-trash3-fill me-1"></i> Confirm Delete
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          {% endif %}
+
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+{% endblock %}

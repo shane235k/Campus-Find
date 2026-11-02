@@ -156,40 +156,52 @@ erDiagram
 
 ---
 
-### 2.2. `Category` (Scheduled: Phase 2)
+### 2.2. `Category` (Implemented in Phase 2)
+- **Application**: `apps.items`
 - **Table**: `items_category`
 - **Fields**:
-  - `id`: AutoField, Primary Key.
-  - `name`: CharField(100), unique (e.g., "Electronics", "IDs & Cards", "Bags & Backpacks").
-  - `slug`: SlugField(120), unique.
-  - `description`: TextField, guidance on what belongings fall here.
-  - `icon_class`: CharField(50), Bootstrap icon identifier.
-  - `is_active`: BooleanField, default `True`.
+  - `id`: BigAutoField, Primary Key.
+  - `name`: `CharField(100)`, unique (e.g., "Electronics", "IDs & Cards", "Bags & Backpacks").
+  - `description`: `TextField(blank=True)`, guidance on what belongings fall here.
+  - `is_active`: `BooleanField(default=True)`, enables soft retirement without breaking foreign key history.
+  - `created_at`: `DateTimeField(auto_now_add=True)`.
 
-### 2.3. `CampusLocation` (Scheduled: Phase 2)
+---
+
+### 2.3. `CampusLocation` (Implemented in Phase 2)
+- **Application**: `apps.items`
 - **Table**: `items_campuslocation`
 - **Fields**:
-  - `id`: AutoField, Primary Key.
-  - `building_name`: CharField(120) (e.g., "Central Library", "Engineering Block B").
-  - `floor_number`: CharField(30) (e.g., "Ground Floor", "Level 2").
-  - `room_or_area`: CharField(120) (e.g., "Reading Room 204", "Cafeteria South Corner").
-  - `landmark_description`: TextField, helpful visual landmarks.
-  - `latitude` / `longitude`: DecimalField(9, 6), optional GPS coordinates.
+  - `id`: BigAutoField, Primary Key.
+  - `name`: `CharField(150)`, unique (e.g., "Central Library", "Main Cafeteria").
+  - `description`: `TextField(blank=True)`, room numbers, floor indicators, or visual landmarks.
+  - `is_active`: `BooleanField(default=True)`, enables location deprecation while preserving history.
+  - `created_at`: `DateTimeField(auto_now_add=True)`.
 
-### 2.4. `Item` (Scheduled: Phase 2)
+---
+
+### 2.4. `Item` (Implemented in Phase 2)
+- **Application**: `apps.items`
 - **Table**: `items_item`
 - **Fields**:
-  - `id`: UUID, Primary Key.
-  - `title`: CharField(200).
-  - `description`: TextField.
-  - `item_type`: CharField(10), choices: `LOST`, `FOUND`.
-  - `status`: CharField(20), choices: `REPORTED`, `MATCHED`, `CLAIMED`, `RESOLVED`, `CLOSED`.
-  - `category`: ForeignKey to `Category`, `on_delete=models.PROTECT`.
-  - `location`: ForeignKey to `CampusLocation`, `on_delete=models.SET_NULL`, null=True.
-  - `reported_by`: ForeignKey to `CampusUser`, `on_delete=models.CASCADE`.
-  - `date_lost_or_found`: DateField.
-  - `primary_image`: ImageField upload to `item_images/%Y/%m/`.
-  - `created_at` / `updated_at`: DateTimeField with auto-timestamps.
+  - `id`: `UUIDField(primary_key=True, default=uuid.uuid4, editable=False)`.
+  - `title`: `CharField(200)`, clear item title.
+  - `description`: `TextField`, detailed characteristics, distinguishing marks, colors, contents.
+  - `item_type`: `CharField(10)`, choices: `LOST` ("Lost Item"), `FOUND` ("Found Item"). Indexed.
+  - `category`: `ForeignKey(Category, on_delete=models.PROTECT, related_name="items")`.
+  - `location`: `ForeignKey(CampusLocation, on_delete=models.PROTECT, related_name="items")`.
+  - `date_lost_or_found`: `DateField`, incident date; validated to never be in the future. Indexed.
+  - `image`: `ImageField(upload_to=item_image_upload_path, blank=True, null=True)`, validated via Pillow (max 5 MB, JPEG/PNG/WEBP formats).
+  - `reported_by`: `ForeignKey(CampusUser, on_delete=models.CASCADE, related_name="reported_items")`.
+  - `status`: `CharField(20)`, choices: `OPEN` ("Open"), `CLAIM_PENDING` ("Claim Pending"), `RESOLVED` ("Resolved"), `CLOSED` ("Closed"). Default `OPEN`. Indexed.
+  - `created_at`: `DateTimeField(auto_now_add=True)`. Indexed.
+  - `updated_at`: `DateTimeField(auto_now=True)`.
+- **Database Indexes**:
+  - `[item_type, status, -created_at]` (composite index for rapid filtering of active catalog listings).
+  - Individual indexes on `item_type`, `status`, `date_lost_or_found`, `created_at`.
+- **Properties & Privacy Controls**:
+  - `is_lost`, `is_found`, `is_open`, `is_resolved`, `is_closed`, `is_claim_pending` (convenience boolean query helpers).
+  - `reporter_display_name`: Strictly returns `full_name` or `username`. Guarantees that sensitive attributes (`email`, `phone_number`, `student_id`) are never exposed in public views or API payloads.
 
 ### 2.5. `ItemEmbedding` (Scheduled: Phase 3)
 - **Table**: `matching_itemembedding`

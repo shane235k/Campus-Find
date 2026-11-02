@@ -17,11 +17,11 @@
               <span class="badge bg-white bg-opacity-20 text-white" style="font-size: 0.7rem;">Desk Moderator</span>
             </div>
             <h2 class="fw-bold mb-1">{{ user.get_full_name|default:user.username }}</h2>
-            <p class="text-white-50 mb-0">Campus Lost &amp; Found Operations Desk — Verify ownership claims and oversee inventory.</p>
+            <p class="text-white-50 mb-0">Campus Lost &amp; Found Operations Desk — Review catalog submissions, adjust workflow states, and oversee physical inventory.</p>
           </div>
-          <div class="col-md-4 text-md-end">
-            <a href="/admin/" target="_blank" class="btn btn-warning btn-sm rounded-pill px-3 py-2 fw-semibold shadow-sm text-dark me-2">
-              <i class="bi bi-shield-lock-fill me-1"></i> Django Admin Site
+          <div class="col-md-4 text-md-end d-flex justify-content-md-end gap-2 flex-wrap">
+            <a href="/admin/items/item/" target="_blank" class="btn btn-warning btn-sm rounded-pill px-3 py-2 fw-semibold shadow-sm text-dark">
+              <i class="bi bi-shield-lock-fill me-1"></i> Django Admin Items
             </a>
             <a href="{% url 'accounts:profile' %}" class="btn btn-outline-light btn-sm rounded-pill px-3 py-2 fw-semibold">
               <i class="bi bi-person-gear me-1"></i> Profile
@@ -31,44 +31,44 @@
       </div>
     </div>
 
-    <!-- Admin Operational Metrics -->
+    <!-- Admin Operational Metrics (From Real Database Aggregates) -->
     <div class="row g-3 mb-4">
       <div class="col-6 col-lg-3">
         <div class="card border-0 shadow-sm rounded-4 h-100 p-3 bg-white">
           <div class="d-flex align-items-center justify-content-between mb-2">
-            <span class="text-muted small fw-semibold">Claim Queue</span>
-            <div class="rounded-3 bg-warning-subtle p-2 text-warning">
-              <i class="bi bi-shield-check fs-5"></i>
-            </div>
-          </div>
-          <h3 class="fw-bold mb-0 text-dark">0</h3>
-          <small class="text-muted">Awaiting staff review</small>
-        </div>
-      </div>
-
-      <div class="col-6 col-lg-3">
-        <div class="card border-0 shadow-sm rounded-4 h-100 p-3 bg-white">
-          <div class="d-flex align-items-center justify-content-between mb-2">
-            <span class="text-muted small fw-semibold">Active Inventory</span>
+            <span class="text-muted small fw-semibold">Total Cataloged</span>
             <div class="rounded-3 bg-primary-subtle p-2 text-primary">
               <i class="bi bi-box-seam fs-5"></i>
             </div>
           </div>
-          <h3 class="fw-bold mb-0 text-dark">0</h3>
-          <small class="text-muted">Found items stored</small>
+          <h3 class="fw-bold mb-0 text-dark">{{ total_items|default:"0" }}</h3>
+          <small class="text-muted">All lost &amp; found items</small>
         </div>
       </div>
 
       <div class="col-6 col-lg-3">
         <div class="card border-0 shadow-sm rounded-4 h-100 p-3 bg-white">
           <div class="d-flex align-items-center justify-content-between mb-2">
-            <span class="text-muted small fw-semibold">Lost Reports</span>
-            <div class="rounded-3 bg-danger-subtle p-2 text-danger">
-              <i class="bi bi-flag fs-5"></i>
+            <span class="text-muted small fw-semibold">Open Reports</span>
+            <div class="rounded-3 bg-warning-subtle p-2 text-warning">
+              <i class="bi bi-hourglass-split fs-5"></i>
             </div>
           </div>
-          <h3 class="fw-bold mb-0 text-dark">0</h3>
-          <small class="text-muted">Active missing inquiries</small>
+          <h3 class="fw-bold mb-0 text-dark">{{ open_items|default:"0" }}</h3>
+          <small class="text-muted">Awaiting turn-in / claim</small>
+        </div>
+      </div>
+
+      <div class="col-6 col-lg-3">
+        <div class="card border-0 shadow-sm rounded-4 h-100 p-3 bg-white">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <span class="text-muted small fw-semibold">Found Turn-ins</span>
+            <div class="rounded-3 bg-success-subtle p-2 text-success">
+              <i class="bi bi-check2-circle fs-5"></i>
+            </div>
+          </div>
+          <h3 class="fw-bold mb-0 text-success">{{ found_items|default:"0" }}</h3>
+          <small class="text-muted">Turned into campus desk</small>
         </div>
       </div>
 
@@ -76,12 +76,12 @@
         <div class="card border-0 shadow-sm rounded-4 h-100 p-3 bg-white">
           <div class="d-flex align-items-center justify-content-between mb-2">
             <span class="text-muted small fw-semibold">Resolved Items</span>
-            <div class="rounded-3 bg-success-subtle p-2 text-success">
-              <i class="bi bi-check-circle fs-5"></i>
+            <div class="rounded-3 bg-info-subtle p-2 text-info">
+              <i class="bi bi-patch-check-fill fs-5"></i>
             </div>
           </div>
-          <h3 class="fw-bold mb-0 text-dark">0</h3>
-          <small class="text-muted">Returned to owners</small>
+          <h3 class="fw-bold mb-0 text-info">{{ resolved_items|default:"0" }}</h3>
+          <small class="text-muted">Reclaimed by owners</small>
         </div>
       </div>
     </div>
@@ -89,17 +89,103 @@
     <!-- Operations Panel -->
     <div class="row g-4">
       <div class="col-lg-8">
+        
+        <!-- Recent Catalog Reports Moderation Table -->
         <div class="card border-0 shadow-sm rounded-4 bg-white mb-4">
           <div class="card-header bg-white border-bottom p-4 d-flex justify-content-between align-items-center">
-            <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-list-check me-2 text-primary"></i>Pending Ownership Claims</h5>
-            <span class="badge bg-light text-muted border">Queue: 0</span>
-          </div>
-          <div class="card-body p-4 text-center py-5">
-            <div class="mb-3 text-muted">
-              <i class="bi bi-inbox fs-1"></i>
+            <div>
+              <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-list-check me-2 text-primary"></i>Recent Catalog Submissions</h5>
+              <small class="text-muted">Showing latest reports logged across all campus facilities</small>
             </div>
-            <h6 class="fw-bold text-dark mb-1">Queue is Currently Empty</h6>
-            <p class="text-muted small mb-0">Student claims will appear here for identification verification, proof of ownership review, and handover sign-off.</p>
+            <a href="{% url 'items:index' %}" class="btn btn-outline-primary btn-sm rounded-pill">
+              <i class="bi bi-grid me-1"></i> View All Items
+            </a>
+          </div>
+
+          <div class="card-body p-0">
+            {% if recent_items %}
+              <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                  <thead class="table-light small text-muted text-uppercase" style="letter-spacing: 0.05em;">
+                    <tr>
+                      <th class="ps-4">Item</th>
+                      <th>Type</th>
+                      <th>Category</th>
+                      <th>Reported By</th>
+                      <th>Status</th>
+                      <th>Date</th>
+                      <th class="text-end pe-4">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody class="small">
+                    {% for item in recent_items %}
+                      <tr>
+                        <td class="ps-4">
+                          <div class="d-flex align-items-center gap-2">
+                            {% if item.image %}
+                              <img src="{{ item.image.url }}" alt="" class="rounded-2" width="34" height="34" style="object-fit: cover;">
+                            {% else %}
+                              <div class="rounded-2 bg-light d-flex align-items-center justify-content-center text-muted" style="width: 34px; height: 34px;">
+                                <i class="bi {% if item.is_lost %}bi-search{% else %}bi-box-seam{% endif %}"></i>
+                              </div>
+                            {% endif %}
+                            <a href="{{ item.get_absolute_url }}" class="fw-bold text-dark text-decoration-none">
+                              {{ item.title }}
+                            </a>
+                          </div>
+                        </td>
+                        <td>
+                          {% if item.is_lost %}
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Lost</span>
+                          {% else %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">Found</span>
+                          {% endif %}
+                        </td>
+                        <td>{{ item.category.name }}</td>
+                        <td><span class="text-muted">{{ item.reported_by.username }}</span></td>
+                        <td>
+                          {% if item.is_open %}
+                            <span class="badge bg-primary">Open</span>
+                          {% elif item.is_claim_pending %}
+                            <span class="badge bg-warning text-dark">Pending</span>
+                          {% elif item.is_resolved %}
+                            <span class="badge bg-success">Resolved</span>
+                          {% elif item.is_closed %}
+                            <span class="badge bg-secondary">Closed</span>
+                          {% endif %}
+                        </td>
+                        <td class="text-muted">{{ item.date_lost_or_found|date:"M d" }}</td>
+                        <td class="text-end pe-4">
+                          <a href="{{ item.get_absolute_url }}" class="btn btn-sm btn-outline-secondary py-1 px-2 rounded" title="Inspect">
+                            <i class="bi bi-eye"></i>
+                          </a>
+                          <a href="{% url 'items:edit' item.pk %}" class="btn btn-sm btn-outline-primary py-1 px-2 rounded ms-1" title="Edit">
+                            <i class="bi bi-pencil"></i>
+                          </a>
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% else %}
+              <div class="text-center py-5 p-4 text-muted">
+                <i class="bi bi-inbox fs-1 opacity-50"></i>
+                <h6 class="fw-bold text-dark mt-2 mb-1">Catalog is Empty</h6>
+                <small>No items have been filed on the campus hub yet.</small>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Claims Queue (Phase 4 placeholder) -->
+        <div class="card border-0 shadow-sm rounded-4 bg-white mb-4">
+          <div class="card-header bg-white border-bottom p-4 d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-shield-check me-2 text-success"></i>Ownership Claim Verification Queue</h5>
+            <span class="badge bg-light text-muted border">Phase 4</span>
+          </div>
+          <div class="card-body p-4 text-center py-4 text-muted small">
+            Student ownership challenge claims and verification evidence review will activate in Phase 4.
           </div>
         </div>
       </div>
@@ -108,18 +194,21 @@
       <div class="col-lg-4">
         <div class="card border-0 shadow-sm rounded-4 bg-white mb-4">
           <div class="card-header bg-white border-bottom p-4">
-            <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-tools me-2 text-primary"></i>Staff Tools</h6>
+            <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-tools me-2 text-primary"></i>Desk Management Tools</h6>
           </div>
           <div class="card-body p-4">
             <div class="d-grid gap-2">
-              <a href="/admin/" target="_blank" class="btn btn-light text-start py-2 px-3 rounded-3 border">
-                <i class="bi bi-lock me-2 text-danger"></i> Open Django Admin Console
+              <a href="/admin/items/item/" target="_blank" class="btn btn-light text-start py-2 px-3 rounded-3 border">
+                <i class="bi bi-database me-2 text-primary"></i> Moderate Items in Admin
+              </a>
+              <a href="/admin/items/category/" target="_blank" class="btn btn-light text-start py-2 px-3 rounded-3 border">
+                <i class="bi bi-tags me-2 text-success"></i> Manage Categories ({{ categories_count }})
+              </a>
+              <a href="/admin/items/campuslocation/" target="_blank" class="btn btn-light text-start py-2 px-3 rounded-3 border">
+                <i class="bi bi-geo-alt me-2 text-danger"></i> Manage Locations ({{ locations_count }})
               </a>
               <a href="{% url 'items:index' %}" class="btn btn-light text-start py-2 px-3 rounded-3 border">
-                <i class="bi bi-grid me-2 text-primary"></i> Review Campus Catalog
-              </a>
-              <a href="{% url 'accounts:profile' %}" class="btn btn-light text-start py-2 px-3 rounded-3 border">
-                <i class="bi bi-person-circle me-2 text-info"></i> Staff Account Settings
+                <i class="bi bi-search me-2 text-info"></i> Browse Public Catalog
               </a>
             </div>
           </div>
@@ -130,9 +219,9 @@
             <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-shield-check me-2 text-success"></i>Verification Protocol</h6>
           </div>
           <div class="card-body p-4 small text-muted">
-            <p class="mb-2"><i class="bi bi-dot text-primary"></i>Request university ID and cross-check registration number.</p>
-            <p class="mb-2"><i class="bi bi-dot text-primary"></i>Examine unique markings, passwords, or purchase receipts.</p>
-            <p class="mb-0"><i class="bi bi-dot text-primary"></i>Log handover timestamp and claimant confirmation signature in the physical binder.</p>
+            <p class="mb-2"><i class="bi bi-dot text-primary"></i>Verify student ID and matching enrollment records.</p>
+            <p class="mb-2"><i class="bi bi-dot text-primary"></i>Cross-examine serial numbers, distinctive markings, or purchase receipts.</p>
+            <p class="mb-0"><i class="bi bi-dot text-primary"></i>Mark status as <strong>RESOLVED</strong> only after claimant receives the physical item.</p>
           </div>
         </div>
       </div>

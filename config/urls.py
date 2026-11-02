@@ -24,6 +24,7 @@ urlpatterns = [
     path("claims/", include("apps.claims.urls", namespace="claims")),
     path("notifications/", include("apps.notifications.urls", namespace="notifications")),
     path("dashboard/", include("apps.dashboard.urls", namespace="dashboard")),
+    path("api/v1/", include("apps.items.api_urls", namespace="api_v1")),
 ]
 
 # Serve media and static files in development mode

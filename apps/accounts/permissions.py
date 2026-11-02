@@ -61,3 +61,4 @@ class AdminRequiredMixin(RoleRequiredMixin):
 
 class SuperAdminRequiredMixin(RoleRequiredMixin):
     allowed_roles = (CampusUser.Role.SUPER_ADMIN,)
+

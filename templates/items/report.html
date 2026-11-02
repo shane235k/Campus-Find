@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }} — Campus Lost &amp; Found Hub{% endblock %}
+
+{% block content %}
+<section class="py-5" style="background-color: var(--bg-main); min-height: 85vh;">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8 col-xl-7">
+
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-4">
+          <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-decoration-none">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'items:index' %}" class="text-decoration-none">Items Catalog</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ page_title }}</li>
+          </ol>
+        </nav>
+
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden bg-white">
+          
+          <!-- Header Banner -->
+          <div class="p-4 text-white" style="background: linear-gradient(135deg, var(--navy-primary) 0%, var(--navy-light) 100%);">
+            <div class="d-flex align-items-center gap-3">
+              <div class="rounded-circle bg-white bg-opacity-10 d-flex align-items-center justify-content-center p-3" style="width: 58px; height: 58px;">
+                <i class="bi {{ header_icon }} fs-2 text-white"></i>
+              </div>
+              <div>
+                <span class="badge bg-{{ badge_color }} text-uppercase fw-bold mb-1" style="font-size: 0.7rem; letter-spacing: 0.05em;">
+                  {{ item_type }} Report
+                </span>
+                <h4 class="fw-bold mb-0 text-white">{{ headline }}</h4>
+                <small class="text-white-50">{{ subheadline }}</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-body p-4 p-md-5">
+
+            <!-- Non-field Errors -->
+            {% if form.non_field_errors %}
+              <div class="alert alert-danger border-0 rounded-3 mb-4" role="alert">
+                {% for error in form.non_field_errors %}
+                  <div class="small"><i class="bi bi-exclamation-triangle-fill me-2"></i>{{ error }}</div>
+                {% endfor %}
+              </div>
+            {% endif %}
+
+            <form method="post" enctype="multipart/form-data" novalidate>
+              {% csrf_token %}
+
+              <div class="row g-3">
+                
+                <!-- Title -->
+                <div class="col-12">
+                  <label for="{{ form.title.id_for_label }}" class="form-label fw-semibold text-secondary small">
+                    Item Title <span class="text-danger">*</span>
+                  </label>
+                  <input type="text" name="title" id="{{ form.title.id_for_label }}" 
+                         class="form-control {% if form.title.errors %}is-invalid{% endif %}" 
+                         placeholder="e.g., Black Dell XPS 15 with GitHub Sticker" 
+                         value="{{ form.title.value|default:'' }}" required autofocus>
+                  {% if form.title.errors %}
+                    <div class="text-danger small mt-1">{{ form.title.errors.0 }}</div>
+                  {% else %}
+                    <div class="form-text small text-muted">A clear, recognizable title identifying the item.</div>
+                  {% endif %}
+                </div>
+
+                <!-- Description -->
+                <div class="col-12">
+                  <label for="{{ form.description.id_for_label }}" class="form-label fw-semibold text-secondary small">
+                    Detailed Narrative &amp; Distinguishing Marks <span class="text-danger">*</span>
+                  </label>
+                  <textarea name="description" id="{{ form.description.id_for_label }}" rows="4"
+                            class="form-control {% if form.description.errors %}is-invalid{% endif %}" 
+                            placeholder="Describe colors, scratches, brand, stickers, keychains, case types, or non-sensitive visible details..." required>{{ form.description.value|default:'' }}</textarea>
+                  {% if form.description.errors %}
+                    <div class="text-danger small mt-1">{{ form.description.errors.0 }}</div>
+                  {% else %}
+                    <div class="form-text small text-muted">Provide descriptive appearance details to assist in matching and ownership verification.</div>
+                  {% endif %}
+                </div>
+
+                <!-- Category -->
+                <div class="col-md-6">
+                  <label for="{{ form.category.id_for_label }}" class="form-label fw-semibold text-secondary small">
+                    Classification Category <span class="text-danger">*</span>
+                  </label>
+                  <select name="category" id="{{ form.category.id_for_label }}" 
+                          class="form-select {% if form.category.errors %}is-invalid{% endif %}" required>
+                    <option value="">Select Category</option>
+                    {% for cat in form.category.field.queryset %}
+                      <option value="{{ cat.id }}" {% if form.category.value|stringformat:"s" == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
+                    {% endfor %}
+                  </select>
+                  {% if form.category.errors %}
+                    <div class="text-danger small mt-1">{{ form.category.errors.0 }}</div>
+                  {% endif %}
+                </div>
+
+                <!-- Campus Location -->
+                <div class="col-md-6">
+                  <label for="{{ form.location.id_for_label }}" class="form-label fw-semibold text-secondary small">
+                    {{ form.location.label }} <span class="text-danger">*</span>
+                  </label>
+                  <select name="location" id="{{ form.location.id_for_label }}" 
+                          class="form-select {% if form.location.errors %}is-invalid{% endif %}" required>
+                    <option value="">Select Campus Location</option>
+                    {% for loc in form.location.field.queryset %}
+                      <option value="{{ loc.id }}" {% if form.location.value|stringformat:"s" == loc.id|stringformat:"s" %}selected{% endif %}>{{ loc.name }}</option>
+                    {% endfor %}
+                  </select>
+                  {% if form.location.errors %}
+                    <div class="text-danger small mt-1">{{ form.location.errors.0 }}</div>
+                  {% endif %}
+                </div>
+
+                <!-- Date Lost / Found -->
+                <div class="col-md-6">
+                  <label for="{{ form.date_lost_or_found.id_for_label }}" class="form-label fw-semibold text-secondary small">
+                    {{ form.date_lost_or_found.label }} <span class="text-danger">*</span>
+                  </label>
+                  <input type="date" name="date_lost_or_found" id="{{ form.date_lost_or_found.id_for_label }}" 
+                         class="form-control {% if form.date_lost_or_found.errors %}is-invalid{% endif %}" 
+                         value="{{ form.date_lost_or_found.value|default:'' }}" max="{{ form.fields.date_lost_or_found.widget.attrs.max }}" required>
+                  {% if form.date_lost_or_found.errors %}
+                    <div class="text-danger small mt-1">{{ form.date_lost_or_found.errors.0 }}</div>
+                  {% endif %}
+                </div>
+
+                <!-- Photograph -->
+                <div class="col-md-6">
+                  <label for="{{ form.image.id_for_label }}" class="form-label fw-semibold text-secondary small">
+                    Photograph <span class="badge bg-light text-muted border ms-1">Optional</span>
+                  </label>
+                  <input type="file" name="image" id="{{ form.image.id_for_label }}" 
+                         class="form-control {% if form.image.errors %}is-invalid{% endif %}" 
+                         accept="image/jpeg,image/png,image/webp">
+                  {% if form.image.errors %}
+                    <div class="text-danger small mt-1">{{ form.image.errors.0 }}</div>
+                  {% else %}
+                    <div class="form-text small text-muted">JPG, PNG, or WEBP (Max size: 5 MB).</div>
+                  {% endif %}
+                </div>
+
+                <!-- Guidance Alert -->
+                <div class="col-12 mt-3">
+                  <div class="alert alert-light border rounded-3 p-3 small text-muted d-flex align-items-start gap-2">
+                    <i class="bi bi-shield-check text-primary fs-5 mt-1"></i>
+                    <div>
+                      <strong>Privacy Protection:</strong> Your report is registered under your authenticated account, but personal contact information (email, phone, student ID) is never made publicly accessible on catalog pages.
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="col-12 mt-4 pt-2">
+                  <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold rounded-3 shadow-sm" style="background-color: var(--navy-primary); border-color: var(--navy-primary);">
+                    <i class="bi bi-send-fill me-2"></i> Submit {{ item_type }} Report
+                  </button>
+                </div>
+
+              </div>
+            </form>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

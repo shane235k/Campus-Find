@@ -4,7 +4,7 @@
 [![PostgreSQL](https://img.shields.io/badge/Neon%20PostgreSQL-Cloud-00E599?style=for-the-badge&logo=postgresql&logoColor=white)](https://neon.tech/)
 [![pgvector](https://img.shields.io/badge/pgvector-Enabled-336791?style=for-the-badge)](https://github.com/pgvector/pgvector)
 [![Bootstrap 5](https://img.shields.io/badge/Bootstrap-5.3-7952B3?style=for-the-badge&logo=bootstrap&logoColor=white)](https://getbootstrap.com/)
-[![Phase 1 Status](https://img.shields.io/badge/Phase%201-COMPLETED-success?style=for-the-badge)](#)
+[![Phase 2 Status](https://img.shields.io/badge/Phase%202-COMPLETED-success?style=for-the-badge)](#)
 
 A centralized university platform engineered to reunite students, faculty, and campus staff with misplaced belongings through automated cataloging, verified ownership claims, and an AI semantic matching engine powered by Sentence Transformers and Neon PostgreSQL `pgvector`.
 
@@ -138,7 +138,7 @@ python manage.py migrate
 ```bash
 python manage.py test apps config
 ```
-*All 38 test cases pass with status `OK`.*
+*All 62 test cases pass with status `OK` (0 failures, 0 errors across accounts, items, and dashboard).*
 
 ### 3.7. Start the Development Server
 ```bash
@@ -148,8 +148,9 @@ Visit `http://127.0.0.1:8000/` in your browser.
 
 ---
 
-## 4. Key Security & Authentication Features (Phase 1)
+## 4. Key Security & Implementation Features
 
+### 4.1. Authentication & Access Control (Phase 1)
 1. **Role-Based Access Control**:
    - `STUDENT`: Self-service item reporting, claim submissions, student portal.
    - `ADMIN`: Operational staff console, claim review queue, staff moderation.
@@ -162,6 +163,22 @@ Visit `http://127.0.0.1:8000/` in your browser.
    - Role escalation, student ID tampering, and email spoofing are strictly prevented at form and model levels.
 5. **POST-Only Safe Logout**:
    - Protected against CSRF attacks and pre-fetching browser hazards.
+
+### 4.2. Lost & Found Core Features (Phase 2)
+1. **Consolidated Item Model**:
+   - Single clean data model for both `LOST` and `FOUND` reports with lifecycle states: `OPEN`, `CLAIM_PENDING`, `RESOLVED`, `CLOSED`.
+2. **Student Privacy Protection**:
+   - `reporter_display_name` strictly displays full name or username without leaking student emails, phone numbers, or registration IDs.
+3. **Search & Multi-Parametric Filtering**:
+   - Keyword search across title and description, filtering by item type, active category, campus location, date range, and status.
+   - Default public browsing automatically excludes `RESOLVED` and `CLOSED` items.
+4. **Secure Image Pipeline**:
+   - Hard 5 MB limit, Pillow format verification (`JPEG`, `PNG`, `WEBP`), UUID upload path obfuscation, and disk cleanup upon item deletion or image replacement.
+5. **Strict Authorization**:
+   - Item editing and deletion restricted to the report owner or administrator. Non-owners receive HTTP 403 Forbidden.
+   - Deletion endpoint is strictly POST-only (rejects GET with HTTP 405 Method Not Allowed).
+6. **REST API**:
+   - Full DRF endpoints under `/api/v1/items/`, `/api/v1/categories/`, `/api/v1/locations/`.
 
 ---
 

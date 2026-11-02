@@ -24,9 +24,26 @@
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link {% if request.resolver_match.app_name == 'items' %}active{% endif %}" href="{% url 'items:index' %}">
+          <a class="nav-link {% if request.resolver_match.app_name == 'items' and request.resolver_match.url_name == 'list' %}active{% endif %}" href="{% url 'items:list' %}">
             <i class="bi bi-grid me-1"></i> Browse Items
           </a>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle {% if 'report' in request.resolver_match.url_name %}active{% endif %}" href="#" id="reportDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-plus-circle me-1"></i> Report Item
+          </a>
+          <ul class="dropdown-menu dropdown-menu-dark border-0 shadow" aria-labelledby="reportDropdown">
+            <li>
+              <a class="dropdown-item py-2" href="{% url 'items:report_lost' %}">
+                <i class="bi bi-search text-danger me-2"></i> Report Lost Item
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item py-2" href="{% url 'items:report_found' %}">
+                <i class="bi bi-box-seam text-success me-2"></i> Report Found Item
+              </a>
+            </li>
+          </ul>
         </li>
         <li class="nav-item">
           <a class="nav-link {% if request.resolver_match.app_name == 'matching' %}active{% endif %}" href="{% url 'matching:index' %}">
@@ -71,6 +88,16 @@
               <li>
                 <a class="dropdown-item py-2" href="{% url 'dashboard:index' %}">
                   <i class="bi bi-speedometer2 me-2 text-primary"></i> Dashboard
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item py-2" href="{% url 'items:report_lost' %}">
+                  <i class="bi bi-search me-2 text-danger"></i> Report Lost Item
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item py-2" href="{% url 'items:report_found' %}">
+                  <i class="bi bi-box-seam me-2 text-success"></i> Report Found Item
                 </a>
               </li>
               <li>

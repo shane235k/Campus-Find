@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit Report — Campus Lost &amp; Found Hub{% endblock %}
+
+{% block content %}
+<section class="py-5" style="background-color: var(--bg-main); min-height: 85vh;">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8 col-xl-7">
+
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-4">
+          <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-decoration-none">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'items:index' %}" class="text-decoration-none">Items Catalog</a></li>
+            <li class="breadcrumb-item"><a href="{{ item.get_absolute_url }}" class="text-decoration-none">{{ item.title }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Edit Report</li>
+          </ol>
+        </nav>
+
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden bg-white">
+          
+          <!-- Header Banner -->
+          <div class="p-4 text-white" style="background: linear-gradient(135deg, var(--navy-primary) 0%, var(--navy-light) 100%);">
+            <div class="d-flex align-items-center gap-3">
+              <div class="rounded-circle bg-white bg-opacity-10 d-flex align-items-center justify-content-center p-3" style="width: 58px; height: 58px;">
+                <i class="bi bi-pencil-square fs-2 text-white"></i>
+              </div>
+              <div>
+                <span class="badge {% if item.is_lost %}bg-danger{% else %}bg-success{% endif %} text-uppercase fw-bold mb-1" style="font-size: 0.7rem; letter-spacing: 0.05em;">
+                  Editing {{ item.get_item_type_display }} Report
+                </span>
+                <h4 class="fw-bold mb-0 text-white">Modify Item Details</h4>
+                <small class="text-white-50">Update description, category, location, or photograph</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-body p-4 p-md-5">
+
+            <!-- Non-field Errors -->
+            {% if form.non_field_errors %}
+              <div class="alert alert-danger border-0 rounded-3 mb-4" role="alert">
+                {% for error in form.non_field_errors %}
+                  <div class="small"><i class="bi bi-exclamation-triangle-fill me-2"></i>{{ error }}</div>
+                {% endfor %}
+              </div>
+            {% endif %}
+
+            <form method="post" enctype="multipart/form-data" novalidate>
+              {% csrf_token %}
+
+              <div class="row g-3">
+                
+                <!-- Title -->
+                <div class="col-12">
+                  <label for="{{ form.title.id_for_label }}" class="form-label fw-semibold text-secondary small">
+                    Item Title <span class="text-danger">*</span>
+                  </label>
+                  <input type="text" name="title" id="{{ form.title.id_for_label }}" 
+                         class="form-control {% if form.title.errors %}is-invalid{% endif %}" 
+                         value="{{ form.title.value|default:item.title }}" required>
+                  {% if form.title.errors %}
+                    <div class="text-danger small mt-1">{{ form.title.errors.0 }}</div>
+                  {% endif %}
+                </div>
+
+                <!-- Description -->
+                <div class="col-12">
+                  <label for="{{ form.description.id_for_label }}" class="form-label fw-semibold text-secondary small">
+                    Detailed Narrative <span class="text-danger">*</span>
+                  </label>
+                  <textarea name="description" id="{{ form.description.id_for_label }}" rows="4"
+                            class="form-control {% if form.description.errors %}is-invalid{% endif %}" required>{{ form.description.value|default:item.description }}</textarea>
+                  {% if form.description.errors %}
+                    <div class="text-danger small mt-1">{{ form.description.errors.0 }}</div>
+                  {% endif %}
+                </div>
+
+                <!-- Category -->
+                <div class="col-md-6">
+                  <label for="{{ form.category.id_for_label }}" class="form-label fw-semibold text-secondary small">
+                    Classification Category <span class="text-danger">*</span>
+                  </label>
+                  <select name="category" id="{{ form.category.id_for_label }}" 
+                          class="form-select {% if form.category.errors %}is-invalid{% endif %}" required>
+                    {% for cat in form.fields.category.queryset %}
+                      <option value="{{ cat.id }}" {% if form.category.value|stringformat:"s" == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
+                    {% endfor %}
+                  </select>
+                  {% if form.category.errors %}
+                    <div class="text-danger small mt-1">{{ form.category.errors.0 }}</div>
+                  {% endif %}
+                </div>
+
+                <!-- Campus Location -->
+                <div class="col-md-6">
+                  <label for="{{ form.location.id_for_label }}" class="form-label fw-semibold text-secondary small">
+                    Campus Location <span class="text-danger">*</span>
+                  </label>
+                  <select name="location" id="{{ form.location.id_for_label }}" 
+                          class="form-select {% if form.location.errors %}is-invalid{% endif %}" required>
+                    {% for loc in form.fields.location.queryset %}
+                      <option value="{{ loc.id }}" {% if form.location.value|stringformat:"s" == loc.id|stringformat:"s" %}selected{% endif %}>{{ loc.name }}</option>
+                    {% endfor %}
+                  </select>
+                  {% if form.location.errors %}
+                    <div class="text-danger small mt-1">{{ form.location.errors.0 }}</div>
+                  {% endif %}
+                </div>
+
+                <!-- Date Lost / Found -->
+                <div class="col-md-6">
+                  <label for="{{ form.date_lost_or_found.id_for_label }}" class="form-label fw-semibold text-secondary small">
+                    Incident Date <span class="text-danger">*</span>
+                  </label>
+                  <input type="date" name="date_lost_or_found" id="{{ form.date_lost_or_found.id_for_label }}" 
+                         class="form-control {% if form.date_lost_or_found.errors %}is-invalid{% endif %}" 
+                         value="{{ form.date_lost_or_found.value|date:'Y-m-d'|default:item.date_lost_or_found|date:'Y-m-d' }}" 
+                         max="{{ form.fields.date_lost_or_found.widget.attrs.max }}" required>
+                  {% if form.date_lost_or_found.errors %}
+                    <div class="text-danger small mt-1">{{ form.date_lost_or_found.errors.0 }}</div>
+                  {% endif %}
+                </div>
+
+                <!-- Image Management -->
+                <div class="col-md-6">
+                  <label for="{{ form.image.id_for_label }}" class="form-label fw-semibold text-secondary small">
+                    Upload Replacement Photo
+                  </label>
+                  <input type="file" name="image" id="{{ form.image.id_for_label }}" 
+                         class="form-control {% if form.image.errors %}is-invalid{% endif %}" 
+                         accept="image/jpeg,image/png,image/webp">
+                  {% if form.image.errors %}
+                    <div class="text-danger small mt-1">{{ form.image.errors.0 }}</div>
+                  {% else %}
+                    <div class="form-text small text-muted">Leave empty to keep existing photo (max 5 MB).</div>
+                  {% endif %}
+                </div>
+
+                <!-- Current Image Preview & Removal Option -->
+                {% if item.image %}
+                  <div class="col-12 mt-3">
+                    <div class="p-3 bg-light rounded-3 border d-flex align-items-center gap-3">
+                      <img src="{{ item.image.url }}" alt="{{ item.title }}" class="rounded-3 shadow-sm" width="80" height="80" style="object-fit: cover;">
+                      <div class="flex-grow-1">
+                        <div class="fw-semibold small text-dark">Current Photograph Attached</div>
+                        {% if form.remove_image %}
+                          <div class="form-check mt-1">
+                            <input class="form-check-input" type="checkbox" name="remove_image" id="{{ form.remove_image.id_for_label }}" {% if form.remove_image.value %}checked{% endif %}>
+                            <label class="form-check-label small text-danger fw-semibold" for="{{ form.remove_image.id_for_label }}">
+                              Remove current photograph without replacing
+                            </label>
+                          </div>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+                {% endif %}
+
+                <!-- Action Buttons -->
+                <div class="col-12 mt-4 pt-2 d-flex justify-content-between align-items-center">
+                  <a href="{{ item.get_absolute_url }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                    <i class="bi bi-arrow-left me-1"></i> Cancel
+                  </a>
+                  <button type="submit" class="btn btn-primary btn-sm rounded-pill px-4 py-2 fw-semibold shadow-sm" style="background-color: var(--navy-primary); border-color: var(--navy-primary);">
+                    <i class="bi bi-check2-circle me-1"></i> Save Changes
+                  </button>
+                </div>
+
+              </div>
+            </form>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

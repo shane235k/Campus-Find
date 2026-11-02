@@ -21,16 +21,22 @@
             <h2 class="fw-bold mb-1">Welcome back, {{ user.first_name|default:user.username }}!</h2>
             <p class="text-white-50 mb-0">Track your reported belongings, active ownership claims, and automated match alerts.</p>
           </div>
-          <div class="col-md-4 text-md-end">
-            <a href="{% url 'accounts:profile' %}" class="btn btn-light btn-sm rounded-pill px-3 py-2 fw-semibold shadow-sm">
-              <i class="bi bi-person-gear me-1"></i> Edit Profile
+          <div class="col-md-4 text-md-end d-flex justify-content-md-end gap-2 flex-wrap">
+            <a href="{% url 'items:report_lost' %}" class="btn btn-danger btn-sm rounded-pill px-3 py-2 fw-semibold shadow-sm">
+              <i class="bi bi-search me-1"></i> Report Lost
+            </a>
+            <a href="{% url 'items:report_found' %}" class="btn btn-success btn-sm rounded-pill px-3 py-2 fw-semibold shadow-sm">
+              <i class="bi bi-plus-circle me-1"></i> Report Found
+            </a>
+            <a href="{% url 'accounts:profile' %}" class="btn btn-outline-light btn-sm rounded-pill px-3 py-2 fw-semibold">
+              <i class="bi bi-person-gear me-1"></i> Profile
             </a>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Quick Stat Cards -->
+    <!-- Quick Stat Cards (Computed from Real DB Aggregates) -->
     <div class="row g-3 mb-4">
       <div class="col-6 col-lg-3">
         <div class="card border-0 shadow-sm rounded-4 h-100 p-3 bg-white">
@@ -40,7 +46,7 @@
               <i class="bi bi-search fs-5"></i>
             </div>
           </div>
-          <h3 class="fw-bold mb-0 text-dark">0</h3>
+          <h3 class="fw-bold mb-0 text-dark">{{ lost_reports|default:"0" }}</h3>
           <small class="text-muted">Items filed as missing</small>
         </div>
       </div>
@@ -53,7 +59,7 @@
               <i class="bi bi-box-seam fs-5"></i>
             </div>
           </div>
-          <h3 class="fw-bold mb-0 text-dark">0</h3>
+          <h3 class="fw-bold mb-0 text-dark">{{ found_reports|default:"0" }}</h3>
           <small class="text-muted">Handed to lost &amp; found</small>
         </div>
       </div>
@@ -61,26 +67,26 @@
       <div class="col-6 col-lg-3">
         <div class="card border-0 shadow-sm rounded-4 h-100 p-3 bg-white">
           <div class="d-flex align-items-center justify-content-between mb-2">
-            <span class="text-muted small fw-semibold">Active Claims</span>
-            <div class="rounded-3 bg-warning-subtle p-2 text-warning">
-              <i class="bi bi-shield-check fs-5"></i>
+            <span class="text-muted small fw-semibold">Open Reports</span>
+            <div class="rounded-3 bg-primary-subtle p-2 text-primary">
+              <i class="bi bi-hourglass-split fs-5"></i>
             </div>
           </div>
-          <h3 class="fw-bold mb-0 text-dark">0</h3>
-          <small class="text-muted">Awaiting desk review</small>
+          <h3 class="fw-bold mb-0 text-dark">{{ open_reports|default:"0" }}</h3>
+          <small class="text-muted">Currently active</small>
         </div>
       </div>
 
       <div class="col-6 col-lg-3">
         <div class="card border-0 shadow-sm rounded-4 h-100 p-3 bg-white">
           <div class="d-flex align-items-center justify-content-between mb-2">
-            <span class="text-muted small fw-semibold">AI Match Alerts</span>
-            <div class="rounded-3 bg-primary-subtle p-2 text-primary">
-              <i class="bi bi-cpu fs-5"></i>
+            <span class="text-muted small fw-semibold">Resolved Reports</span>
+            <div class="rounded-3 bg-success-subtle p-2 text-success">
+              <i class="bi bi-check2-circle fs-5"></i>
             </div>
           </div>
-          <h3 class="fw-bold mb-0 text-dark">0</h3>
-          <small class="text-muted">Semantic match suggestions</small>
+          <h3 class="fw-bold mb-0 text-success">{{ resolved_reports|default:"0" }}</h3>
+          <small class="text-muted">Reunited with owners</small>
         </div>
       </div>
     </div>
@@ -92,22 +98,100 @@
       <div class="col-lg-8">
         <div class="card border-0 shadow-sm rounded-4 bg-white mb-4">
           <div class="card-header bg-white border-bottom p-4 d-flex justify-content-between align-items-center">
-            <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-clock-history me-2 text-primary"></i>My Reported Belongings</h5>
+            <div>
+              <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-clock-history me-2 text-primary"></i>My Reported Belongings</h5>
+              <small class="text-muted">Total submitted: <strong>{{ total_reports }}</strong> reports</small>
+            </div>
             <a href="{% url 'items:index' %}" class="btn btn-outline-primary btn-sm rounded-pill">
-              <i class="bi bi-grid me-1"></i> Browse All Items
+              <i class="bi bi-grid me-1"></i> Browse Catalog
             </a>
           </div>
-          <div class="card-body p-4 text-center py-5">
-            <div class="mb-3 text-muted">
-              <i class="bi bi-inbox fs-1"></i>
-            </div>
-            <h6 class="fw-bold text-dark mb-1">No Item Reports Yet</h6>
-            <p class="text-muted small mb-3">You haven't reported any lost or found items. Once Phase 2 is launched, reporting will be active right here.</p>
-            <div class="d-flex justify-content-center gap-2">
-              <a href="{% url 'items:index' %}" class="btn btn-primary btn-sm rounded-pill px-3" style="background-color: var(--navy-primary); border-color: var(--navy-primary);">
-                <i class="bi bi-search me-1"></i> Search Campus Catalog
-              </a>
-            </div>
+
+          <div class="card-body p-0">
+            {% if recent_reports %}
+              <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                  <thead class="table-light small text-muted text-uppercase" style="letter-spacing: 0.05em;">
+                    <tr>
+                      <th class="ps-4">Item</th>
+                      <th>Type</th>
+                      <th>Category</th>
+                      <th>Location</th>
+                      <th>Status</th>
+                      <th>Date</th>
+                      <th class="text-end pe-4">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody class="small">
+                    {% for report in recent_reports %}
+                      <tr>
+                        <td class="ps-4">
+                          <div class="d-flex align-items-center gap-2">
+                            {% if report.image %}
+                              <img src="{{ report.image.url }}" alt="" class="rounded-2" width="36" height="36" style="object-fit: cover;">
+                            {% else %}
+                              <div class="rounded-2 bg-light d-flex align-items-center justify-content-center text-muted" style="width: 36px; height: 36px;">
+                                <i class="bi {% if report.is_lost %}bi-search{% else %}bi-box-seam{% endif %}"></i>
+                              </div>
+                            {% endif %}
+                            <div>
+                              <a href="{{ report.get_absolute_url }}" class="fw-bold text-dark text-decoration-none">
+                                {{ report.title }}
+                              </a>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          {% if report.is_lost %}
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Lost</span>
+                          {% else %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">Found</span>
+                          {% endif %}
+                        </td>
+                        <td>{{ report.category.name }}</td>
+                        <td><span class="text-truncate d-inline-block" style="max-width: 120px;">{{ report.location.name }}</span></td>
+                        <td>
+                          {% if report.is_open %}
+                            <span class="badge bg-primary">Open</span>
+                          {% elif report.is_claim_pending %}
+                            <span class="badge bg-warning text-dark">Pending</span>
+                          {% elif report.is_resolved %}
+                            <span class="badge bg-success">Resolved</span>
+                          {% elif report.is_closed %}
+                            <span class="badge bg-secondary">Closed</span>
+                          {% endif %}
+                        </td>
+                        <td class="text-muted">{{ report.date_lost_or_found|date:"M d, Y" }}</td>
+                        <td class="text-end pe-4">
+                          <a href="{{ report.get_absolute_url }}" class="btn btn-sm btn-outline-secondary py-1 px-2 rounded" title="View Details">
+                            <i class="bi bi-eye"></i>
+                          </a>
+                          <a href="{% url 'items:edit' report.pk %}" class="btn btn-sm btn-outline-primary py-1 px-2 rounded ms-1" title="Edit">
+                            <i class="bi bi-pencil"></i>
+                          </a>
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% else %}
+              <div class="text-center py-5 p-4">
+                <div class="mb-3 text-muted">
+                  <i class="bi bi-inbox fs-1 opacity-50"></i>
+                </div>
+                <h6 class="fw-bold text-dark mb-1">No Item Reports Filed</h6>
+                <p class="text-muted small mb-3">You haven't reported any lost or found belongings yet. Report an item to initiate campus matching.</p>
+                <div class="d-flex justify-content-center gap-2">
+                  <a href="{% url 'items:report_lost' %}" class="btn btn-outline-danger btn-sm rounded-pill px-3">
+                    <i class="bi bi-search me-1"></i> Report Lost Item
+                  </a>
+                  <a href="{% url 'items:report_found' %}" class="btn btn-primary btn-sm rounded-pill px-3" style="background-color: var(--navy-primary); border-color: var(--navy-primary);">
+                    <i class="bi bi-plus-circle me-1"></i> Report Found Item
+                  </a>
+                </div>
+              </div>
+            {% endif %}
           </div>
         </div>
 
@@ -118,10 +202,10 @@
           </div>
           <div class="card-body p-4 text-center py-5">
             <div class="mb-3 text-muted">
-              <i class="bi bi-shield-slash fs-1"></i>
+              <i class="bi bi-shield-slash fs-1 opacity-50"></i>
             </div>
             <h6 class="fw-bold text-dark mb-1">No Active Claims</h6>
-            <p class="text-muted small mb-0">When you spot an item in the catalog and verify ownership, your claim status and verification steps will be tracked here.</p>
+            <p class="text-muted small mb-0">When you spot an item in the catalog and verify ownership, your claim status and verification steps will be tracked here in Phase 4.</p>
           </div>
         </div>
       </div>
@@ -134,11 +218,17 @@
           </div>
           <div class="card-body p-4">
             <div class="d-grid gap-2">
-              <a href="{% url 'items:index' %}" class="btn btn-light text-start py-2 px-3 rounded-3 border">
-                <i class="bi bi-grid me-2 text-primary"></i> Browse Found Items
+              <a href="{% url 'items:report_lost' %}" class="btn btn-light text-start py-2 px-3 rounded-3 border text-danger fw-semibold">
+                <i class="bi bi-search me-2"></i> Report Lost Item
               </a>
-              <a href="{% url 'matching:index' %}" class="btn btn-light text-start py-2 px-3 rounded-3 border">
-                <i class="bi bi-cpu me-2 text-success"></i> Check AI Matching
+              <a href="{% url 'items:report_found' %}" class="btn btn-light text-start py-2 px-3 rounded-3 border text-success fw-semibold">
+                <i class="bi bi-plus-circle me-2"></i> Report Found Item
+              </a>
+              <a href="{% url 'items:index' %}?type=LOST" class="btn btn-light text-start py-2 px-3 rounded-3 border">
+                <i class="bi bi-list-ul me-2 text-danger"></i> Browse All Lost Items
+              </a>
+              <a href="{% url 'items:index' %}?type=FOUND" class="btn btn-light text-start py-2 px-3 rounded-3 border">
+                <i class="bi bi-grid me-2 text-success"></i> Browse All Found Items
               </a>
               <a href="{% url 'accounts:profile' %}" class="btn btn-light text-start py-2 px-3 rounded-3 border">
                 <i class="bi bi-person-circle me-2 text-info"></i> Manage Account Profile
