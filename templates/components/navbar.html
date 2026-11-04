@@ -1,156 +1,102 @@
 {% load static %}
-<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
-  <div class="container">
-    <!-- Brand / Logo -->
-    <a class="navbar-brand navbar-brand-wrap" href="{% url 'home' %}">
-      <img src="{% static 'images/logo.svg' %}" alt="Campus Hub Logo" width="36" height="36" class="d-inline-block align-top rounded">
-      <div>
+<nav class="navbar navbar-custom py-3" style="background: transparent !important; background-color: transparent !important; border: none !important; box-shadow: none !important;">
+  <div class="container-fluid px-4 px-lg-5 d-flex align-items-center justify-content-between flex-wrap gap-3">
+    
+    <!-- Left Section: Brand & Navigation Tabs starting from left -->
+    <div class="d-flex align-items-center flex-wrap" style="gap: 2.2rem;">
+      
+      <!-- Clean Text Brand -->
+      <a class="navbar-brand navbar-brand-wrap me-2" href="{% url 'home' %}">
         <span class="brand-text">Campus Hub</span>
-        <span class="brand-sub">Lost &amp; Found Portal</span>
-      </div>
-    </a>
+      </a>
 
-    <!-- Mobile Toggle Button -->
-    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
+      <!-- Navigation Tabs (Green text, spacious, with green bottom underline when active) -->
+      <div class="d-flex align-items-center flex-wrap" style="gap: 1.85rem;">
+        <!-- Home -->
+        <a href="{% url 'home' %}" class="nav-text-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+          Home
+        </a>
 
-    <!-- Navigation Links -->
-    <div class="collapse navbar-collapse" id="navbarContent">
-      <ul class="navbar-nav me-auto ms-lg-4 mb-2 mb-lg-0">
-        <li class="nav-item">
-          <a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" href="{% url 'home' %}">
-            <i class="bi bi-house-door me-1"></i> Home
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link {% if request.resolver_match.app_name == 'items' and request.resolver_match.url_name == 'list' %}active{% endif %}" href="{% url 'items:list' %}">
-            <i class="bi bi-grid me-1"></i> Browse Items
-          </a>
-        </li>
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle {% if 'report' in request.resolver_match.url_name %}active{% endif %}" href="#" id="reportDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="bi bi-plus-circle me-1"></i> Report Item
-          </a>
-          <ul class="dropdown-menu dropdown-menu-dark border-0 shadow" aria-labelledby="reportDropdown">
-            <li>
-              <a class="dropdown-item py-2" href="{% url 'items:report_lost' %}">
-                <i class="bi bi-search text-danger me-2"></i> Report Lost Item
-              </a>
-            </li>
-            <li>
-              <a class="dropdown-item py-2" href="{% url 'items:report_found' %}">
-                <i class="bi bi-box-seam text-success me-2"></i> Report Found Item
-              </a>
-            </li>
-          </ul>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link {% if request.resolver_match.app_name == 'matching' %}active{% endif %}" href="{% url 'matching:index' %}">
-            <i class="bi bi-cpu me-1"></i> AI Matching
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link {% if request.resolver_match.app_name == 'claims' %}active{% endif %}" href="{% url 'claims:index' %}">
-            <i class="bi bi-shield-check me-1"></i> Claims
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link {% if request.resolver_match.app_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard:index' %}">
-            <i class="bi bi-speedometer2 me-1"></i> Dashboard
-          </a>
-        </li>
-      </ul>
+        <!-- Browse Items -->
+        <a href="{% url 'items:list' %}" class="nav-text-link {% if request.resolver_match.app_name == 'items' and request.resolver_match.url_name == 'list' %}active{% endif %}">
+          Browse Items
+        </a>
 
-      <!-- User Actions / Auth Links -->
-      <div class="d-flex align-items-center gap-2">
-        {% if user.is_authenticated %}
-          <div class="dropdown">
-            <button class="btn nav-btn-outline dropdown-toggle d-flex align-items-center gap-2 text-decoration-none" type="button" id="userMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-              {% if user.profile_picture %}
-                <img src="{{ user.profile_picture.url }}" alt="Profile" class="rounded-circle" width="24" height="24" style="object-fit: cover;">
-              {% else %}
-                <i class="bi bi-person-circle"></i>
-              {% endif %}
-              <span class="d-none d-md-inline">{{ user.first_name|default:user.username }}</span>
-              <span class="badge {% if user.role == 'SUPER_ADMIN' %}bg-danger{% elif user.role == 'ADMIN' %}bg-warning text-dark{% else %}bg-primary{% endif %} rounded-pill text-uppercase" style="font-size: 0.65rem;">
-                {{ user.get_role_display }}
-              </span>
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="userMenuButton">
-              <li class="px-3 py-2 border-bottom">
-                <div class="fw-bold text-dark text-truncate" style="max-width: 220px;">{{ user.get_full_name|default:user.username }}</div>
-                <div class="text-muted small text-truncate" style="max-width: 220px;">{{ user.email }}</div>
-                {% if user.student_id %}
-                  <div class="badge bg-light text-dark border mt-1 font-monospace" style="font-size: 0.7rem;">ID: {{ user.student_id }}</div>
-                {% endif %}
-              </li>
-              <li>
-                <a class="dropdown-item py-2" href="{% url 'dashboard:index' %}">
-                  <i class="bi bi-speedometer2 me-2 text-primary"></i> Dashboard
-                </a>
-              </li>
-              <li>
-                <a class="dropdown-item py-2" href="{% url 'items:report_lost' %}">
-                  <i class="bi bi-search me-2 text-danger"></i> Report Lost Item
-                </a>
-              </li>
-              <li>
-                <a class="dropdown-item py-2" href="{% url 'items:report_found' %}">
-                  <i class="bi bi-box-seam me-2 text-success"></i> Report Found Item
-                </a>
-              </li>
-              <li>
-                <a class="dropdown-item py-2" href="{% url 'matching:hub' %}">
-                  <i class="bi bi-cpu me-2 text-purple" style="color: #7952b3;"></i> AI Matching Hub
-                </a>
-              </li>
-              <li>
-                <a class="dropdown-item py-2" href="{% url 'accounts:profile' %}">
-                  <i class="bi bi-person-gear me-2 text-secondary"></i> My Profile
-                </a>
-              </li>
-              {% if user.is_super_admin %}
-                <li><hr class="dropdown-divider"></li>
-                <li class="dropdown-header text-uppercase text-muted" style="font-size: 0.7rem;">Administration</li>
-                <li>
-                  <a class="dropdown-item py-2" href="{% url 'accounts:create_admin' %}">
-                    <i class="bi bi-person-plus-fill me-2 text-success"></i> Provision Staff Admin
-                  </a>
-                </li>
-                <li>
-                  <a class="dropdown-item py-2" href="/admin/" target="_blank">
-                    <i class="bi bi-lock-fill me-2 text-danger"></i> Django Admin Site
-                  </a>
-                </li>
-              {% elif user.is_admin_user %}
-                <li><hr class="dropdown-divider"></li>
-                <li>
-                  <a class="dropdown-item py-2" href="/admin/" target="_blank">
-                    <i class="bi bi-lock-fill me-2 text-danger"></i> Django Admin Site
-                  </a>
-                </li>
-              {% endif %}
-              <li><hr class="dropdown-divider"></li>
-              <li class="px-2">
-                <form method="post" action="{% url 'accounts:logout' %}">
-                  {% csrf_token %}
-                  <button type="submit" class="dropdown-item py-2 text-danger rounded d-flex align-items-center">
-                    <i class="bi bi-box-arrow-right me-2"></i> Log Out
-                  </button>
-                </form>
-              </li>
-            </ul>
-          </div>
-        {% else %}
-          <a href="{% url 'accounts:login' %}" class="nav-btn-outline text-decoration-none">
-            <i class="bi bi-box-arrow-in-right me-1"></i> Log In
-          </a>
-          <a href="{% url 'accounts:register' %}" class="nav-btn-solid text-decoration-none">
-            <i class="bi bi-person-plus me-1"></i> Register
-          </a>
-        {% endif %}
+        <!-- Report Lost -->
+        <a href="{% url 'items:report_lost' %}" class="nav-text-link {% if request.resolver_match.url_name == 'report_lost' %}active{% endif %}">
+          Report Lost
+        </a>
+
+        <!-- Report Found -->
+        <a href="{% url 'items:report_found' %}" class="nav-text-link {% if request.resolver_match.url_name == 'report_found' %}active{% endif %}">
+          Report Found
+        </a>
+
+        <!-- AI Matching -->
+        <a href="{% url 'matching:index' %}" class="nav-text-link {% if request.resolver_match.app_name == 'matching' %}active{% endif %}">
+          AI Matching
+        </a>
+
+        <!-- Claims -->
+        <a href="{% url 'claims:index' %}" class="nav-text-link {% if request.resolver_match.app_name == 'claims' and request.resolver_match.url_name != 'admin_dashboard' %}active{% endif %}">
+          Claims
+        </a>
+
+        <!-- Dashboard -->
+        <a href="{% url 'dashboard:index' %}" class="nav-text-link {% if request.resolver_match.app_name == 'dashboard' %}active{% endif %}">
+          Dashboard
+        </a>
       </div>
     </div>
+
+    <!-- Rightmost Corner: Login & Register Buttons (or User Controls if Authenticated) -->
+    <div class="d-flex align-items-center justify-content-end flex-wrap ms-auto" style="gap: 1.25rem;">
+      {% if user.is_authenticated %}
+        <!-- Alerts Tab with Count Badge -->
+        <a href="{% url 'notifications:list' %}" class="nav-text-link position-relative {% if request.resolver_match.app_name == 'notifications' %}active{% endif %}">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+          <span>Alerts</span>
+          {% if unread_notifications_count > 0 %}
+            <span class="badge rounded-pill ms-1" style="font-size: 0.72rem; padding: 0.15rem 0.45rem; background-color: #15803d !important; color: #ffffff !important; font-weight: 800;">
+              {{ unread_notifications_count }}
+            </span>
+          {% endif %}
+        </a>
+
+        <!-- Staff / Admin Queue Tab -->
+        {% if user.is_super_admin or user.is_admin_user %}
+          <a href="{% url 'claims:admin_dashboard' %}" class="nav-text-link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}">
+            Staff Desk
+          </a>
+        {% endif %}
+
+        <!-- Profile Tab -->
+        <a href="{% url 'accounts:profile' %}" class="nav-text-link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+          Profile ({{ user.username }})
+        </a>
+
+        <!-- Log Out Action Button in Rightmost Corner -->
+        <form method="post" action="{% url 'accounts:logout' %}" class="d-inline m-0 p-0">
+          {% csrf_token %}
+          <button type="submit" class="btn-nav-action">
+            Log Out
+          </button>
+        </form>
+
+      {% else %}
+        <!-- Login & Register Buttons in Rightmost Corner -->
+        <a href="{% url 'accounts:login' %}" class="btn-nav-login">
+          Log In
+        </a>
+
+        <a href="{% url 'accounts:register' %}" class="btn-nav-register">
+          Register
+        </a>
+      {% endif %}
+    </div>
+
   </div>
 </nav>

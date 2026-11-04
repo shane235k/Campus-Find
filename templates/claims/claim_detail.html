@@ -1,0 +1,251 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Claim #{{ claim.id|stringformat:".8s" }} — Campus Lost &amp; Found Hub{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Breadcrumbs -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+      {% if is_admin %}
+        <li class="breadcrumb-item"><a href="{% url 'claims:admin_dashboard' %}" class="text-decoration-none" style="color: #15803d;">Admin Claims Console</a></li>
+      {% else %}
+        <li class="breadcrumb-item"><a href="{% url 'claims:my_claims' %}" class="text-decoration-none" style="color: #15803d;">My Claims</a></li>
+      {% endif %}
+      <li class="breadcrumb-item active" aria-current="page">Claim #{{ claim.id|stringformat:".8s" }}</li>
+    </ol>
+  </nav>
+
+  <!-- Top Banner: Claim Status & Actions -->
+  <div class="card border border-success-subtle shadow-sm rounded-4 bg-white p-4 mb-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+      <div>
+        <div class="d-flex align-items-center gap-2 mb-1">
+          <span class="text-muted small">Claim Reference: <code class="font-monospace text-dark">{{ claim.id }}</code></span>
+          {% if claim.status == 'APPROVED' %}
+            <span class="badge rounded-pill px-3 py-1" style="background-color: #dcfce7; color: #14532d; font-weight: 600;">Approved &amp; Verified</span>
+          {% elif claim.status == 'UNDER_REVIEW' %}
+            <span class="badge rounded-pill px-3 py-1" style="background-color: #f0fdf4; color: #166534; border: 1px solid #bbf7d0;">Under Review</span>
+          {% elif claim.status == 'REJECTED' %}
+            <span class="badge bg-danger-subtle text-danger rounded-pill px-3 py-1">Rejected</span>
+          {% elif claim.status == 'WITHDRAWN' %}
+            <span class="badge bg-light text-muted border rounded-pill px-3 py-1">Withdrawn</span>
+          {% else %}
+            <span class="badge rounded-pill px-3 py-1" style="background-color: #dcfce7; color: #14532d;">Pending Staff Review</span>
+          {% endif %}
+        </div>
+        <h3 class="fw-bold mb-0" style="color: #166534;">Claim for "{{ claim.item.title }}"</h3>
+        <span class="text-muted small">Submitted on {{ claim.created_at|date:"M d, Y H:i" }} by {{ claim.claimant.get_full_name|default:claim.claimant.username }}</span>
+      </div>
+
+      <div class="d-flex gap-2">
+        {% if is_admin %}
+          <a href="{% url 'claims:admin_review' claim.id %}" class="btn px-4">
+            Open Admin Review Portal
+          </a>
+        {% endif %}
+
+        {% if can_withdraw %}
+          <button type="button" class="btn btn-sm px-3" data-bs-toggle="modal" data-bs-target="#withdrawModal">
+            Withdraw Claim
+          </button>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Decision Outcomes Alerts -->
+  {% if claim.status == 'APPROVED' %}
+    <div class="alert border border-success-subtle rounded-4 p-4 mb-4 shadow-sm" style="background-color: #f0fdf4; color: #14532d;">
+      <div class="d-flex align-items-start gap-3">
+        <div class="rounded-circle d-flex align-items-center justify-content-center p-2" style="background-color: #15803d; color: #ffffff;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        </div>
+        <div>
+          <h5 class="fw-bold mb-1">Ownership Successfully Verified &amp; Approved!</h5>
+          <p class="small mb-2">
+            Campus security and desk moderators have verified your ownership proof. The item has been marked as <strong>RESOLVED</strong>.
+          </p>
+          <div class="small fw-semibold">
+            Collection instructions: Bring your student ID ({{ claim.claimant.student_id|default:"University Card" }}) to the {{ claim.item.location.name }} desk during open hours to collect your belonging.
+          </div>
+        </div>
+      </div>
+    </div>
+  {% elif claim.status == 'REJECTED' %}
+    <div class="alert alert-danger border-0 rounded-4 p-4 mb-4 shadow-sm">
+      <div class="d-flex align-items-start gap-3">
+        <div>
+          <h5 class="fw-bold mb-1">Ownership Claim Not Approved</h5>
+          <p class="small mb-1">
+            Campus administration has reviewed this claim and determined that ownership could not be verified.
+          </p>
+          {% if claim.rejection_reason %}
+            <div class="p-3 bg-white rounded-3 mt-2 border text-dark small">
+              <strong>Reviewer Reason:</strong> {{ claim.rejection_reason }}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  {% elif claim.status == 'UNDER_REVIEW' %}
+    <div class="alert border border-success-subtle rounded-4 p-4 mb-4 shadow-sm" style="background-color: #f0fdf4; color: #14532d;">
+      <div class="d-flex align-items-center gap-3">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+        <div>
+          <h6 class="fw-bold mb-0">Under Active Investigation</h6>
+          <p class="small mb-0">Desk staff are inspecting the item and cross-referencing your serial numbers and distinguishing features.</p>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="row g-4">
+    <!-- Left Column: Item Information -->
+    <div class="col-lg-5">
+      <div class="card border border-success-subtle shadow-sm rounded-4 bg-white overflow-hidden mb-4 h-100">
+        <div class="card-header bg-white border-bottom py-3">
+          <h6 class="fw-bold mb-0 d-flex align-items-center gap-2" style="color: #166534;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+            Associated Campus Report
+          </h6>
+        </div>
+        <div class="card-body p-4">
+          <div class="text-center mb-3">
+            {% if claim.item.image %}
+              <img src="{{ claim.item.image.url }}" alt="{{ claim.item.title }}" class="rounded-3 shadow-sm img-fluid" style="max-height: 200px; object-fit: contain;">
+            {% else %}
+              <div class="bg-light rounded-3 d-flex align-items-center justify-content-center text-muted border mx-auto" style="height: 140px; width: 140px;">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+              </div>
+            {% endif %}
+          </div>
+
+          <h5 class="fw-bold text-dark mb-2">{{ claim.item.title }}</h5>
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <span class="badge rounded-pill px-2 py-1" style="background-color: #dcfce7; color: #14532d; font-weight: 600;">
+              {{ claim.item.get_item_type_display }}
+            </span>
+            <span class="badge bg-light text-dark border">{{ claim.item.category.name }}</span>
+            <span class="badge bg-light text-muted border">Status: {{ claim.item.get_status_display }}</span>
+          </div>
+
+          <div class="p-3 bg-light rounded-3 small text-secondary mb-3">
+            {{ claim.item.description }}
+          </div>
+
+          <div class="small text-muted border-top pt-3">
+            <div class="mb-1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2" class="me-1"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>Location: <strong>{{ claim.item.location.name }}</strong></div>
+            <div class="mb-1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2" class="me-1"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>Date Reported: <strong>{{ claim.item.date_lost_or_found|date:"M d, Y" }}</strong></div>
+            <div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2" class="me-1"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>Reporter: <strong>{{ claim.item.reporter_display_name }}</strong></div>
+          </div>
+
+          <div class="mt-4">
+            <a href="{% url 'items:detail' claim.item.id %}" class="btn btn-sm w-100">
+              View Item Catalog Page
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Confidential Verification Evidence -->
+    <div class="col-lg-7">
+      <div class="card border border-success-subtle shadow-sm rounded-4 bg-white p-4 p-md-5 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+          <h5 class="fw-bold mb-0 d-flex align-items-center gap-2" style="color: #166534;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            Confidential Ownership Proof
+          </h5>
+          <span class="badge bg-light text-muted border">Private Evidence</span>
+        </div>
+
+        <!-- Claim Narrative -->
+        <div class="mb-4">
+          <h6 class="fw-bold small text-uppercase" style="color: #166534;">Loss Circumstances &amp; Description</h6>
+          <div class="p-3 bg-light rounded-3 text-secondary small lh-lg" style="white-space: pre-wrap;">{{ claim.claim_description }}</div>
+        </div>
+
+        <!-- Distinguishing Features -->
+        <div class="mb-4">
+          <h6 class="fw-bold small text-uppercase" style="color: #166534;">
+            Private Distinguishing Features
+          </h6>
+          <div class="p-3 bg-light rounded-3 text-secondary small lh-lg" style="white-space: pre-wrap;">{{ claim.distinguishing_features }}</div>
+        </div>
+
+        <!-- Contents -->
+        {% if claim.item_contents %}
+          <div class="mb-4">
+            <h6 class="fw-bold small text-uppercase" style="color: #166534;">Internal Item Contents</h6>
+            <div class="p-3 bg-light rounded-3 text-secondary small lh-lg" style="white-space: pre-wrap;">{{ claim.item_contents }}</div>
+          </div>
+        {% endif %}
+
+        <!-- Last Seen -->
+        {% if claim.last_seen_details %}
+          <div class="mb-4">
+            <h6 class="fw-bold small text-uppercase" style="color: #166534;">Last Seen Location &amp; Timestamp</h6>
+            <div class="p-3 bg-light rounded-3 text-secondary small">{{ claim.last_seen_details }}</div>
+          </div>
+        {% endif %}
+
+        <!-- Uploaded Evidence Document / Image -->
+        <div class="mb-3">
+          <h6 class="fw-bold small text-uppercase" style="color: #166534;">Supporting Evidence Document / Receipt</h6>
+          {% if claim.evidence_file %}
+            <div class="p-3 bg-light rounded-3 border d-flex justify-content-between align-items-center">
+              <div class="d-flex align-items-center gap-2">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                <div>
+                  <span class="fw-semibold text-dark small d-block">{{ claim.evidence_file.name|truncatechars:40 }}</span>
+                  <span class="text-muted" style="font-size: 0.75rem;">Verified attachment</span>
+                </div>
+              </div>
+              <a href="{{ claim.evidence_file.url }}" target="_blank" class="btn btn-sm px-3">
+                View / Download
+              </a>
+            </div>
+          {% else %}
+            <div class="p-3 bg-light rounded-3 text-muted small">
+              No supplemental receipt or evidence file was uploaded with this claim.
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Withdrawal Modal -->
+  {% if can_withdraw %}
+    <div class="modal fade" id="withdrawModal" tabindex="-1" aria-labelledby="withdrawModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 shadow">
+          <div class="modal-header border-bottom p-4">
+            <h5 class="modal-title fw-bold text-danger" id="withdrawModalLabel">
+              Withdraw Ownership Claim
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body p-4">
+            <p class="mb-2 text-dark">Are you sure you want to withdraw this claim?</p>
+            <p class="text-muted small mb-0">
+              Withdrawing releases the item so other claimants can be verified. You may file another claim later if needed.
+            </p>
+          </div>
+          <div class="modal-footer border-top p-3 d-flex justify-content-between">
+            <button type="button" class="btn px-4" data-bs-dismiss="modal">Cancel</button>
+            <form method="post" action="{% url 'claims:withdraw' claim.id %}">
+              {% csrf_token %}
+              <button type="submit" class="btn px-4">
+                Yes, Withdraw Claim
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

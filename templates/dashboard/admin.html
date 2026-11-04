@@ -4,104 +4,85 @@
 {% block title %}Administrator Console — Campus Lost &amp; Found Hub{% endblock %}
 
 {% block content %}
-<section class="py-4" style="background-color: var(--bg-main); min-height: 85vh;">
+<style>
+  .breakdown-switch-pane {
+    position: absolute;
+    top: 1.5rem;
+    left: 1.5rem;
+    right: 1.5rem;
+    bottom: 1.5rem;
+    transition: opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1), transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .breakdown-switch-pane.is-active {
+    opacity: 1;
+    pointer-events: auto;
+    transform: scale(1);
+    visibility: visible;
+  }
+  .breakdown-switch-pane.is-hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.96);
+    visibility: hidden;
+  }
+  .ring-donut-slice {
+    transition: stroke-dasharray 0.45s ease, stroke-dashoffset 0.45s ease;
+  }
+  .desk-tool-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: #15803d !important;
+    font-weight: 600;
+    font-size: 0.88rem;
+    text-decoration: none;
+    transition: color 0.15s ease, padding-left 0.15s ease;
+  }
+  .desk-tool-link:hover {
+    color: #166534 !important;
+    text-decoration: underline;
+    padding-left: 0.25rem;
+  }
+  .desk-tool-link svg {
+    flex-shrink: 0;
+    stroke: #15803d;
+  }
+</style>
+
+<section class="py-4" style="background-color: #ffffff; min-height: 85vh;">
   <div class="container">
     
-    <!-- Welcome Header Banner -->
-    <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden" style="background: linear-gradient(135deg, #0f2942 0%, #1e3a5f 100%);">
-      <div class="card-body p-4 p-md-5 text-white">
-        <div class="row align-items-center g-3">
-          <div class="col-md-8">
-            <div class="d-flex align-items-center gap-2 mb-2">
-              <span class="badge bg-warning text-dark text-uppercase fw-bold" style="font-size: 0.7rem; letter-spacing: 0.05em;">Staff Console</span>
-              <span class="badge bg-white bg-opacity-20 text-white" style="font-size: 0.7rem;">Desk Moderator</span>
-            </div>
-            <h2 class="fw-bold mb-1">{{ user.get_full_name|default:user.username }}</h2>
-            <p class="text-white-50 mb-0">Campus Lost &amp; Found Operations Desk — Review catalog submissions, adjust workflow states, and oversee physical inventory.</p>
-          </div>
-          <div class="col-md-4 text-md-end d-flex justify-content-md-end gap-2 flex-wrap">
-            <a href="{% url 'matching:hub' %}" class="btn btn-warning btn-sm rounded-pill px-3 py-2 fw-semibold shadow-sm text-dark">
-              <i class="bi bi-cpu me-1"></i> AI Matching Hub ({{ total_matches_count|default:"0" }})
-            </a>
-            <a href="/admin/items/item/" target="_blank" class="btn btn-outline-light btn-sm rounded-pill px-3 py-2 fw-semibold">
-              <i class="bi bi-shield-lock-fill me-1"></i> Django Admin
-            </a>
-            <a href="{% url 'accounts:profile' %}" class="btn btn-outline-light btn-sm rounded-pill px-3 py-2 fw-semibold">
-              <i class="bi bi-person-gear me-1"></i> Profile
-            </a>
-          </div>
-        </div>
+    <!-- Top Operations Header (Clean minimal header without badges) -->
+    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+      <div>
+        <h2 class="fw-bold mb-1" style="color: #111827; letter-spacing: -0.02em; font-family: Arial, sans-serif;">Desk Operations Console</h2>
+        <p class="text-muted small mb-0">Review catalog submissions, verify ownership claims, and monitor resolution workflows.</p>
+      </div>
+      
+      <!-- Action Controls -->
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <a href="{% url 'claims:admin_dashboard' %}" class="btn btn-sm">
+          Claims Queue ({{ pending_claims_count|default:"0" }})
+        </a>
+        <a href="{% url 'items:report_found' %}" class="btn btn-sm">
+          Log Found Item
+        </a>
       </div>
     </div>
 
-    <!-- Admin Operational Metrics (From Real Database Aggregates) -->
-    <div class="row g-3 mb-4">
-      <div class="col-6 col-lg-3">
-        <div class="card border-0 shadow-sm rounded-4 h-100 p-3 bg-white">
-          <div class="d-flex align-items-center justify-content-between mb-2">
-            <span class="text-muted small fw-semibold">Total Cataloged</span>
-            <div class="rounded-3 bg-primary-subtle p-2 text-primary">
-              <i class="bi bi-box-seam fs-5"></i>
-            </div>
-          </div>
-          <h3 class="fw-bold mb-0 text-dark">{{ total_items|default:"0" }}</h3>
-          <small class="text-muted">All lost &amp; found items</small>
-        </div>
-      </div>
-
-      <div class="col-6 col-lg-3">
-        <div class="card border-0 shadow-sm rounded-4 h-100 p-3 bg-white">
-          <div class="d-flex align-items-center justify-content-between mb-2">
-            <span class="text-muted small fw-semibold">Open Reports</span>
-            <div class="rounded-3 bg-warning-subtle p-2 text-warning">
-              <i class="bi bi-hourglass-split fs-5"></i>
-            </div>
-          </div>
-          <h3 class="fw-bold mb-0 text-dark">{{ open_items|default:"0" }}</h3>
-          <small class="text-muted">Awaiting turn-in / claim</small>
-        </div>
-      </div>
-
-      <div class="col-6 col-lg-3">
-        <div class="card border-0 shadow-sm rounded-4 h-100 p-3 bg-white">
-          <div class="d-flex align-items-center justify-content-between mb-2">
-            <span class="text-muted small fw-semibold">Found Turn-ins</span>
-            <div class="rounded-3 bg-success-subtle p-2 text-success">
-              <i class="bi bi-check2-circle fs-5"></i>
-            </div>
-          </div>
-          <h3 class="fw-bold mb-0 text-success">{{ found_items|default:"0" }}</h3>
-          <small class="text-muted">Turned into campus desk</small>
-        </div>
-      </div>
-
-      <div class="col-6 col-lg-3">
-        <div class="card border-0 shadow-sm rounded-4 h-100 p-3 bg-white">
-          <div class="d-flex align-items-center justify-content-between mb-2">
-            <span class="text-muted small fw-semibold">Resolved Items</span>
-            <div class="rounded-3 bg-info-subtle p-2 text-info">
-              <i class="bi bi-patch-check-fill fs-5"></i>
-            </div>
-          </div>
-          <h3 class="fw-bold mb-0 text-info">{{ resolved_items|default:"0" }}</h3>
-          <small class="text-muted">Reclaimed by owners</small>
-        </div>
-      </div>
-    </div>
-
-    <!-- Operations Panel -->
+    <!-- Operations Content Area -->
     <div class="row g-4">
       <div class="col-lg-8">
         
-        <!-- Recent Catalog Reports Moderation Table -->
-        <div class="card border-0 shadow-sm rounded-4 bg-white mb-4">
-          <div class="card-header bg-white border-bottom p-4 d-flex justify-content-between align-items-center">
+        <!-- Recent Catalog Submissions Table (With Side-by-Side Green SVG Icons) -->
+        <div class="card border border-success-subtle shadow-sm rounded-4 bg-white mb-4">
+          <div class="card-header bg-white border-bottom p-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div>
-              <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-list-check me-2 text-primary"></i>Recent Catalog Submissions</h5>
+              <h5 class="fw-bold mb-0" style="color: #166534; font-family: Arial, sans-serif;">Recent Catalog Submissions</h5>
               <small class="text-muted">Showing latest reports logged across all campus facilities</small>
             </div>
-            <a href="{% url 'items:index' %}" class="btn btn-outline-primary btn-sm rounded-pill">
-              <i class="bi bi-grid me-1"></i> View All Items
+            <a href="{% url 'items:index' %}" class="btn btn-sm">
+              View All Items
             </a>
           </div>
 
@@ -129,42 +110,41 @@
                               <img src="{{ item.image.url }}" alt="" class="rounded-2" width="34" height="34" style="object-fit: cover;">
                             {% else %}
                               <div class="rounded-2 bg-light d-flex align-items-center justify-content-center text-muted" style="width: 34px; height: 34px;">
-                                <i class="bi {% if item.is_lost %}bi-search{% else %}bi-box-seam{% endif %}"></i>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                               </div>
                             {% endif %}
-                            <a href="{{ item.get_absolute_url }}" class="fw-bold text-dark text-decoration-none">
+                            <a href="{{ item.get_absolute_url }}" class="fw-bold text-decoration-none" style="color: #166534;">
                               {{ item.title }}
                             </a>
                           </div>
                         </td>
                         <td>
-                          {% if item.is_lost %}
-                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Lost</span>
-                          {% else %}
-                            <span class="badge bg-success-subtle text-success border border-success-subtle">Found</span>
-                          {% endif %}
+                          <span class="badge rounded-pill px-2 py-1" style="background-color: #dcfce7; color: #14532d; font-weight: 600;">{{ item.get_item_type_display }}</span>
                         </td>
                         <td>{{ item.category.name }}</td>
                         <td><span class="text-muted">{{ item.reported_by.username }}</span></td>
                         <td>
-                          {% if item.is_open %}
-                            <span class="badge bg-primary">Open</span>
-                          {% elif item.is_claim_pending %}
-                            <span class="badge bg-warning text-dark">Pending</span>
-                          {% elif item.is_resolved %}
-                            <span class="badge bg-success">Resolved</span>
-                          {% elif item.is_closed %}
-                            <span class="badge bg-secondary">Closed</span>
-                          {% endif %}
+                          <span class="badge rounded-pill px-2 py-1" style="background-color: #f0fdf4; color: #166534; border: 1px solid #bbf7d0;">{{ item.get_status_display }}</span>
                         </td>
                         <td class="text-muted">{{ item.date_lost_or_found|date:"M d" }}</td>
-                        <td class="text-end pe-4">
-                          <a href="{{ item.get_absolute_url }}" class="btn btn-sm btn-outline-secondary py-1 px-2 rounded" title="Inspect">
-                            <i class="bi bi-eye"></i>
-                          </a>
-                          <a href="{% url 'items:edit' item.pk %}" class="btn btn-sm btn-outline-primary py-1 px-2 rounded ms-1" title="Edit">
-                            <i class="bi bi-pencil"></i>
-                          </a>
+                        <td class="text-end pe-4" style="white-space: nowrap;">
+                          <!-- Side-by-Side Green Action SVGs (Magnifying Glass = Inspect, Notepad with Pen = Edit) -->
+                          <div class="d-inline-flex align-items-center gap-1 justify-content-end">
+                            <!-- Inspect: Magnifying Glass SVG -->
+                            <a href="{{ item.get_absolute_url }}" class="table-action-icon" title="Inspect Item" aria-label="Inspect Item">
+                              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                              </svg>
+                            </a>
+                            <!-- Edit: Notepad with Pen SVG -->
+                            <a href="{% url 'items:edit' item.pk %}" class="table-action-icon" title="Edit Item" aria-label="Edit Item">
+                              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 20h9"></path>
+                                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                              </svg>
+                            </a>
+                          </div>
                         </td>
                       </tr>
                     {% endfor %}
@@ -173,7 +153,6 @@
               </div>
             {% else %}
               <div class="text-center py-5 p-4 text-muted">
-                <i class="bi bi-inbox fs-1 opacity-50"></i>
                 <h6 class="fw-bold text-dark mt-2 mb-1">Catalog is Empty</h6>
                 <small>No items have been filed on the campus hub yet.</small>
               </div>
@@ -181,55 +160,323 @@
           </div>
         </div>
 
-        <!-- Claims Queue (Phase 4 placeholder) -->
-        <div class="card border-0 shadow-sm rounded-4 bg-white mb-4">
-          <div class="card-header bg-white border-bottom p-4 d-flex justify-content-between align-items-center">
-            <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-shield-check me-2 text-success"></i>Ownership Claim Verification Queue</h5>
-            <span class="badge bg-light text-muted border">Phase 4</span>
+        <!-- Claims Queue (Phase 4 Active) -->
+        <div class="card border border-success-subtle shadow-sm rounded-4 bg-white mb-4">
+          <div class="card-header bg-white border-bottom p-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+              <h5 class="fw-bold mb-0" style="color: #166534; font-family: Arial, sans-serif;">Ownership Claims Verification Queue</h5>
+              <small class="text-muted">Review student proof, compare distinguishing marks, and verify ownership</small>
+            </div>
+            <a href="{% url 'claims:admin_dashboard' %}" class="btn btn-sm px-3">
+              Open Queue ({{ pending_claims_count }} Pending)
+            </a>
           </div>
-          <div class="card-body p-4 text-center py-4 text-muted small">
-            Student ownership challenge claims and verification evidence review will activate in Phase 4.
+          <div class="card-body p-4">
+            <div class="row align-items-center g-3">
+              <div class="col-sm-8">
+                <p class="small text-muted mb-0">
+                  Students file ownership verification claims containing confidential identifying features and receipts. 
+                  Currently, <strong>{{ pending_claims_count }} claim(s)</strong> are awaiting administrative evaluation across campus.
+                </p>
+              </div>
+              <div class="col-sm-4 text-sm-end">
+                <a href="{% url 'claims:admin_dashboard' %}" class="btn btn-sm px-3">
+                  Review Claims &rarr;
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       <!-- Moderation Sidebar -->
       <div class="col-lg-4">
-        <div class="card border-0 shadow-sm rounded-4 bg-white mb-4">
+        <!-- Switchable Visual Inventory Breakdown Card (List View & Ring Graph View) -->
+        <div class="card border border-success-subtle shadow-sm rounded-4 bg-white mb-4">
+          <div class="card-header bg-white border-bottom p-3 px-4 d-flex align-items-center justify-content-between">
+            <h6 class="fw-bold mb-0" style="color: #166534; font-size: 0.95rem;">Inventory Status Breakdown</h6>
+            <!-- Switch Window Toggle Button -->
+            <button type="button" class="btn btn-sm py-1 px-2.5 d-inline-flex align-items-center gap-1.5" id="sidebarToggleGraphBtn" style="font-size: 0.78rem;">
+              <svg id="toggleIconGraph" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M12 2a10 10 0 0 1 10 10h-10z"></path>
+              </svg>
+              <svg id="toggleIconList" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                <line x1="8" y1="6" x2="21" y2="6"></line>
+                <line x1="8" y1="12" x2="21" y2="12"></line>
+                <line x1="8" y1="18" x2="21" y2="18"></line>
+                <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                <line x1="3" y1="18" x2="3.01" y2="18"></line>
+              </svg>
+              <span id="sidebarToggleGraphText">Graph</span>
+            </button>
+          </div>
+
+          <!-- Fixed-dimension Switchable Container (Size never alters between views) -->
+          <div class="card-body p-4 position-relative" style="height: 275px; overflow: hidden;">
+            <!-- VIEW 1: List Breakdown Pane -->
+            <div id="breakdownPaneList" class="breakdown-switch-pane is-active">
+              <!-- Mini Horizontal Progress Breakdown -->
+              <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-1 small">
+                  <span class="text-muted">Catalog Resolution Rate</span>
+                  <span class="fw-bold" style="color: #15803d;">
+                    {% if total_items %}{% widthratio resolved_items total_items 100 %}% Resolved{% else %}0%{% endif %}
+                  </span>
+                </div>
+                <div class="progress rounded-pill overflow-hidden" style="height: 8px; background-color: #f3f4f6;">
+                  {% with total=total_items|default:1 %}
+                    <div class="progress-bar" style="width: {% widthratio resolved_items total 100 %}%; background-color: #15803d;"></div>
+                  {% endwith %}
+                </div>
+              </div>
+
+              <div class="small">
+                <div class="d-flex justify-content-between align-items-center py-1.5 border-bottom">
+                  <span class="text-muted">Total Cataloged</span>
+                  <span class="fw-bold text-dark">{{ total_items|default:"0" }}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center py-1.5 border-bottom">
+                  <span class="text-muted">Open Reports</span>
+                  <span class="fw-bold text-dark">{{ open_items|default:"0" }}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center py-1.5 border-bottom">
+                  <span class="text-muted">Found Turn-ins</span>
+                  <span class="fw-bold" style="color: #15803d;">{{ found_items|default:"0" }}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center py-1.5 border-bottom">
+                  <span class="text-muted">Claims in Review</span>
+                  <span class="fw-bold text-dark">{{ claim_pending_items|default:"0" }}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center pt-1.5">
+                  <span class="text-muted">Resolved Reclaims</span>
+                  <span class="fw-bold" style="color: #166534;">{{ resolved_items|default:"0" }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- VIEW 2: SVG Ring Donut Graph Pane -->
+            <div id="breakdownPaneGraph" class="breakdown-switch-pane is-hidden">
+              <div class="d-flex flex-column align-items-center justify-content-center h-100">
+                <!-- SVG Ring Donut Chart -->
+                <div class="position-relative d-inline-block" style="width: 130px; height: 130px;">
+                  <svg width="130" height="130" viewBox="0 0 130 130" style="transform: rotate(-90deg); display: block;">
+                    <!-- Base Track Circle -->
+                    <circle cx="65" cy="65" r="48" fill="none" stroke="#f3f4f6" stroke-width="15" />
+                    <!-- Dynamic Colored Ring Segments -->
+                    <circle id="ringSliceOpen" class="ring-donut-slice" cx="65" cy="65" r="48" fill="none" stroke="#86efac" stroke-width="15" stroke-dasharray="0 301.59" stroke-dashoffset="0" />
+                    <circle id="ringSliceFound" class="ring-donut-slice" cx="65" cy="65" r="48" fill="none" stroke="#22c55e" stroke-width="15" stroke-dasharray="0 301.59" stroke-dashoffset="0" />
+                    <circle id="ringSliceClaim" class="ring-donut-slice" cx="65" cy="65" r="48" fill="none" stroke="#15803d" stroke-width="15" stroke-dasharray="0 301.59" stroke-dashoffset="0" />
+                    <circle id="ringSliceResolved" class="ring-donut-slice" cx="65" cy="65" r="48" fill="none" stroke="#14532d" stroke-width="15" stroke-dasharray="0 301.59" stroke-dashoffset="0" />
+                  </svg>
+                  <!-- Total Count in Center of Ring -->
+                  <div class="position-absolute top-50 start-50 translate-middle text-center" style="pointer-events: none; line-height: 1.1;">
+                    <span class="fw-bold fs-4 d-block" style="color: #15803d; font-family: Arial, sans-serif;">{{ total_items|default:"0" }}</span>
+                    <span class="text-muted fw-semibold text-uppercase" style="font-size: 0.62rem; letter-spacing: 0.05em;">ITEMS</span>
+                  </div>
+                </div>
+
+                <!-- Status Legend Grid -->
+                <div class="w-100 mt-2.5 pt-1">
+                  <div class="row g-1.5 text-center" style="font-size: 0.72rem;">
+                    <div class="col-6">
+                      <div class="p-1 px-2 rounded-2 border d-flex align-items-center justify-content-between" style="background-color: #f9fafb; border-color: #e5e7eb !important;">
+                        <span class="d-inline-flex align-items-center gap-1 text-muted">
+                          <span style="width: 7px; height: 7px; border-radius: 50%; background-color: #86efac; display: inline-block;"></span>
+                          Open
+                        </span>
+                        <strong class="text-dark">{{ open_items|default:"0" }}</strong>
+                      </div>
+                    </div>
+                    <div class="col-6">
+                      <div class="p-1 px-2 rounded-2 border d-flex align-items-center justify-content-between" style="background-color: #f9fafb; border-color: #e5e7eb !important;">
+                        <span class="d-inline-flex align-items-center gap-1 text-muted">
+                          <span style="width: 7px; height: 7px; border-radius: 50%; background-color: #22c55e; display: inline-block;"></span>
+                          Found
+                        </span>
+                        <strong class="text-dark">{{ found_items|default:"0" }}</strong>
+                      </div>
+                    </div>
+                    <div class="col-6">
+                      <div class="p-1 px-2 rounded-2 border d-flex align-items-center justify-content-between" style="background-color: #f9fafb; border-color: #e5e7eb !important;">
+                        <span class="d-inline-flex align-items-center gap-1 text-muted">
+                          <span style="width: 7px; height: 7px; border-radius: 50%; background-color: #15803d; display: inline-block;"></span>
+                          In Claim
+                        </span>
+                        <strong class="text-dark">{{ claim_pending_items|default:"0" }}</strong>
+                      </div>
+                    </div>
+                    <div class="col-6">
+                      <div class="p-1 px-2 rounded-2 border d-flex align-items-center justify-content-between" style="background-color: #f9fafb; border-color: #e5e7eb !important;">
+                        <span class="d-inline-flex align-items-center gap-1 text-muted">
+                          <span style="width: 7px; height: 7px; border-radius: 50%; background-color: #14532d; display: inline-block;"></span>
+                          Resolved
+                        </span>
+                        <strong class="text-dark">{{ resolved_items|default:"0" }}</strong>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Desk Management Tools -->
+        <div class="card border border-success-subtle shadow-sm rounded-4 bg-white mb-4">
           <div class="card-header bg-white border-bottom p-4">
-            <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-tools me-2 text-primary"></i>Desk Management Tools</h6>
+            <h6 class="fw-bold mb-0" style="color: #166534;">Desk Management Tools</h6>
           </div>
           <div class="card-body p-4">
-            <div class="d-grid gap-2">
-              <a href="/admin/items/item/" target="_blank" class="btn btn-light text-start py-2 px-3 rounded-3 border">
-                <i class="bi bi-database me-2 text-primary"></i> Moderate Items in Admin
+            <div class="d-flex flex-column">
+              <a href="{% url 'claims:admin_dashboard' %}" class="desk-tool-link py-2.5 border-bottom">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+                <span>Claims Moderation Queue ({{ pending_claims_count }})</span>
               </a>
-              <a href="/admin/items/category/" target="_blank" class="btn btn-light text-start py-2 px-3 rounded-3 border">
-                <i class="bi bi-tags me-2 text-success"></i> Manage Categories ({{ categories_count }})
+
+              <a href="{% url 'matching:hub' %}" class="desk-tool-link py-2.5 border-bottom">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+                  <rect x="9" y="9" width="6" height="6"></rect>
+                  <line x1="9" y1="1" x2="9" y2="4"></line>
+                  <line x1="15" y1="1" x2="15" y2="4"></line>
+                  <line x1="9" y1="20" x2="9" y2="23"></line>
+                  <line x1="15" y1="20" x2="15" y2="23"></line>
+                  <line x1="20" y1="9" x2="23" y2="9"></line>
+                  <line x1="20" y1="14" x2="23" y2="14"></line>
+                  <line x1="1" y1="9" x2="4" y2="9"></line>
+                  <line x1="1" y1="14" x2="4" y2="14"></line>
+                </svg>
+                <span>AI Semantic Matches ({{ total_matches_count }})</span>
               </a>
-              <a href="/admin/items/campuslocation/" target="_blank" class="btn btn-light text-start py-2 px-3 rounded-3 border">
-                <i class="bi bi-geo-alt me-2 text-danger"></i> Manage Locations ({{ locations_count }})
+
+              <a href="/admin/items/item/" target="_blank" class="desk-tool-link py-2.5 border-bottom">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="4" y1="21" x2="4" y2="14"></line>
+                  <line x1="4" y1="10" x2="4" y2="3"></line>
+                  <line x1="12" y1="21" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12" y2="3"></line>
+                  <line x1="20" y1="21" x2="20" y2="16"></line>
+                  <line x1="20" y1="12" x2="20" y2="3"></line>
+                  <line x1="1" y1="14" x2="7" y2="14"></line>
+                  <line x1="9" y1="8" x2="15" y2="8"></line>
+                  <line x1="17" y1="16" x2="23" y2="16"></line>
+                </svg>
+                <span>Moderate Items in Admin</span>
               </a>
-              <a href="{% url 'items:index' %}" class="btn btn-light text-start py-2 px-3 rounded-3 border">
-                <i class="bi bi-search me-2 text-info"></i> Browse Public Catalog
+
+              <a href="/admin/items/category/" target="_blank" class="desk-tool-link py-2.5 border-bottom">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                  <line x1="7" y1="7" x2="7.01" y2="7"></line>
+                </svg>
+                <span>Manage Categories ({{ categories_count }})</span>
+              </a>
+
+              <a href="/admin/items/campuslocation/" target="_blank" class="desk-tool-link py-2.5 border-bottom">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                <span>Manage Locations ({{ locations_count }})</span>
+              </a>
+
+              <a href="{% url 'items:index' %}" class="desk-tool-link pt-2.5">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
+                </svg>
+                <span>Browse Public Catalog</span>
               </a>
             </div>
           </div>
         </div>
 
-        <div class="card border-0 shadow-sm rounded-4 bg-white">
-          <div class="card-header bg-white border-bottom p-4">
-            <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-shield-check me-2 text-success"></i>Verification Protocol</h6>
-          </div>
-          <div class="card-body p-4 small text-muted">
-            <p class="mb-2"><i class="bi bi-dot text-primary"></i>Verify student ID and matching enrollment records.</p>
-            <p class="mb-2"><i class="bi bi-dot text-primary"></i>Cross-examine serial numbers, distinctive markings, or purchase receipts.</p>
-            <p class="mb-0"><i class="bi bi-dot text-primary"></i>Mark status as <strong>RESOLVED</strong> only after claimant receives the physical item.</p>
-          </div>
-        </div>
       </div>
     </div>
 
   </div>
 </section>
+
+<!-- Interactive Script for Smooth Window Switch between List & Ring Graph -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const toggleBtn = document.getElementById("sidebarToggleGraphBtn");
+    const toggleText = document.getElementById("sidebarToggleGraphText");
+    const iconGraph = document.getElementById("toggleIconGraph");
+    const iconList = document.getElementById("toggleIconList");
+    const paneList = document.getElementById("breakdownPaneList");
+    const paneGraph = document.getElementById("breakdownPaneGraph");
+
+    let isGraphView = false;
+
+    // Calculate Ring Graph Slices
+    function renderRingGraph() {
+      const total = parseInt("{{ total_items|default:'0' }}", 10) || 0;
+      const openVal = parseInt("{{ open_items|default:'0' }}", 10) || 0;
+      const foundVal = parseInt("{{ found_items|default:'0' }}", 10) || 0;
+      const claimVal = parseInt("{{ claim_pending_items|default:'0' }}", 10) || 0;
+      const resolvedVal = parseInt("{{ resolved_items|default:'0' }}", 10) || 0;
+
+      const C = 2 * Math.PI * 48; // Circumference ~ 301.593
+
+      if (total > 0) {
+        let currentOffset = 0;
+        const slices = [
+          { el: document.getElementById('ringSliceOpen'), val: openVal },
+          { el: document.getElementById('ringSliceFound'), val: foundVal },
+          { el: document.getElementById('ringSliceClaim'), val: claimVal },
+          { el: document.getElementById('ringSliceResolved'), val: resolvedVal }
+        ];
+
+        slices.forEach(slice => {
+          if (!slice.el) return;
+          const sliceLen = (slice.val / total) * C;
+          slice.el.setAttribute('stroke-dasharray', `${sliceLen.toFixed(2)} ${C.toFixed(2)}`);
+          slice.el.setAttribute('stroke-dashoffset', (-currentOffset).toFixed(2));
+          currentOffset += sliceLen;
+        });
+      }
+    }
+
+    if (toggleBtn) {
+      toggleBtn.addEventListener("click", function () {
+        if (!isGraphView) {
+          // Switch to Graph View
+          paneList.classList.remove("is-active");
+          paneList.classList.add("is-hidden");
+
+          paneGraph.classList.remove("is-hidden");
+          paneGraph.classList.add("is-active");
+
+          toggleText.textContent = "List";
+          iconGraph.style.display = "none";
+          iconList.style.display = "inline-block";
+          
+          renderRingGraph();
+          isGraphView = true;
+        } else {
+          // Switch to List View
+          paneGraph.classList.remove("is-active");
+          paneGraph.classList.add("is-hidden");
+
+          paneList.classList.remove("is-hidden");
+          paneList.classList.add("is-active");
+
+          toggleText.textContent = "Graph";
+          iconGraph.style.display = "inline-block";
+          iconList.style.display = "none";
+
+          isGraphView = false;
+        }
+      });
+    }
+
+    // Precalculate ring metrics
+    renderRingGraph();
+  });
+</script>
 {% endblock %}

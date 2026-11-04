@@ -5,49 +5,54 @@
 {% block title %}Browse Campus Items — Campus Lost &amp; Found Hub{% endblock %}
 
 {% block content %}
-<section class="py-4" style="background-color: var(--bg-main); min-height: 85vh;">
+<section class="py-4" style="background-color: var(--bg-page); min-height: 85vh;">
   <div class="container">
     
     <!-- Header Banner -->
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4 pb-2 border-bottom">
       <div>
-        <h2 class="fw-bold mb-1 text-dark">
-          <i class="bi bi-grid-fill me-2" style="color: var(--navy-primary);"></i>Campus Lost &amp; Found Catalog
+        <h2 class="fw-bold mb-1 text-dark" style="font-family: Arial, sans-serif;">
+          Campus Lost &amp; Found Catalog
         </h2>
         <p class="text-muted mb-0 small">
           Discover misplaced belongings across university facilities. Use search and filters to locate potential matches.
         </p>
       </div>
-      <div class="d-flex gap-2">
+      <div class="d-flex flex-wrap gap-2">
         {% if user.is_authenticated %}
-          <a href="{% url 'items:report_lost' %}" class="btn btn-outline-danger btn-sm rounded-pill px-3 py-2 fw-semibold">
-            <i class="bi bi-search me-1"></i> Report Lost Item
+          <a href="{% url 'items:report_lost' %}" class="btn">
+            <span>Report Lost Item</span>
           </a>
-          <a href="{% url 'items:report_found' %}" class="btn btn-primary btn-sm rounded-pill px-3 py-2 fw-semibold shadow-sm" style="background-color: var(--navy-primary); border-color: var(--navy-primary);">
-            <i class="bi bi-plus-circle me-1"></i> Report Found Item
+          <a href="{% url 'items:report_found' %}" class="btn">
+            <span>Report Found Item</span>
           </a>
         {% else %}
-          <a href="{% url 'accounts:login' %}?next={% url 'items:report_lost' %}" class="btn btn-outline-danger btn-sm rounded-pill px-3 py-2 fw-semibold">
-            <i class="bi bi-search me-1"></i> Report Lost Item
+          <a href="{% url 'accounts:login' %}?next={% url 'items:report_lost' %}" class="btn">
+            <span>Report Lost Item</span>
           </a>
-          <a href="{% url 'accounts:login' %}?next={% url 'items:report_found' %}" class="btn btn-primary btn-sm rounded-pill px-3 py-2 fw-semibold shadow-sm" style="background-color: var(--navy-primary); border-color: var(--navy-primary);">
-            <i class="bi bi-plus-circle me-1"></i> Report Found Item
+          <a href="{% url 'accounts:login' %}?next={% url 'items:report_found' %}" class="btn">
+            <span>Report Found Item</span>
           </a>
         {% endif %}
       </div>
     </div>
 
     <!-- Search & Filter Card -->
-    <div class="card border-0 shadow-sm rounded-4 mb-4 bg-white">
+    <div class="card border border-1 rounded-4 mb-4 bg-white" style="border-color: var(--border-light);">
       <div class="card-body p-4">
         <form method="get" action="{% url 'items:index' %}">
           <div class="row g-3">
             
             <!-- Search Query Input -->
             <div class="col-lg-4 col-md-6">
-              <label for="searchInput" class="form-label fw-semibold small text-muted">Keyword Search</label>
+              <label for="searchInput" class="form-label fw-bold small text-dark" style="font-family: Arial, sans-serif;">Keyword Search</label>
               <div class="input-group">
-                <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                <span class="input-group-text bg-white border-end-0">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
+                </span>
                 <input type="text" name="q" id="searchInput" class="form-control border-start-0" 
                        placeholder="Title, brand, color, keywords..." value="{{ current_query }}">
               </div>
@@ -55,7 +60,7 @@
 
             <!-- Item Type Filter -->
             <div class="col-lg-2 col-md-3 col-6">
-              <label for="typeSelect" class="form-label fw-semibold small text-muted">Report Type</label>
+              <label for="typeSelect" class="form-label fw-bold small text-dark" style="font-family: Arial, sans-serif;">Report Type</label>
               <select name="type" id="typeSelect" class="form-select">
                 <option value="">All Types</option>
                 <option value="LOST" {% if current_type == "LOST" %}selected{% endif %}>Lost Only</option>
@@ -65,7 +70,7 @@
 
             <!-- Category Filter -->
             <div class="col-lg-3 col-md-3 col-6">
-              <label for="categorySelect" class="form-label fw-semibold small text-muted">Category</label>
+              <label for="categorySelect" class="form-label fw-bold small text-dark" style="font-family: Arial, sans-serif;">Category</label>
               <select name="category" id="categorySelect" class="form-select">
                 <option value="">All Categories</option>
                 {% for cat in categories %}
@@ -76,7 +81,7 @@
 
             <!-- Campus Location Filter -->
             <div class="col-lg-3 col-md-4 col-6">
-              <label for="locationSelect" class="form-label fw-semibold small text-muted">Campus Location</label>
+              <label for="locationSelect" class="form-label fw-bold small text-dark" style="font-family: Arial, sans-serif;">Campus Location</label>
               <select name="location" id="locationSelect" class="form-select">
                 <option value="">All Locations</option>
                 {% for loc in locations %}
@@ -85,9 +90,9 @@
               </select>
             </div>
 
-            <!-- Status Filter (Admin or explicit) -->
+            <!-- Status Filter -->
             <div class="col-lg-3 col-md-4 col-6">
-              <label for="statusSelect" class="form-label fw-semibold small text-muted">Operational Status</label>
+              <label for="statusSelect" class="form-label fw-bold small text-dark" style="font-family: Arial, sans-serif;">Operational Status</label>
               <select name="status" id="statusSelect" class="form-select">
                 <option value="">Active (Open &amp; Pending)</option>
                 <option value="OPEN" {% if current_status == "OPEN" %}selected{% endif %}>Open</option>
@@ -99,22 +104,22 @@
 
             <!-- Date Range Filters -->
             <div class="col-lg-3 col-md-4 col-6">
-              <label for="dateFromInput" class="form-label fw-semibold small text-muted">From Date</label>
+              <label for="dateFromInput" class="form-label fw-bold small text-dark" style="font-family: Arial, sans-serif;">From Date</label>
               <input type="date" name="date_from" id="dateFromInput" class="form-control" value="{{ current_date_from }}">
             </div>
 
             <div class="col-lg-3 col-md-4 col-6">
-              <label for="dateToInput" class="form-label fw-semibold small text-muted">To Date</label>
+              <label for="dateToInput" class="form-label fw-bold small text-dark" style="font-family: Arial, sans-serif;">To Date</label>
               <input type="date" name="date_to" id="dateToInput" class="form-control" value="{{ current_date_to }}">
             </div>
 
             <!-- Filter Buttons -->
             <div class="col-lg-3 col-md-4 col-12 d-flex align-items-end gap-2">
-              <button type="submit" class="btn btn-primary w-100 fw-semibold" style="background-color: var(--navy-primary); border-color: var(--navy-primary);">
-                <i class="bi bi-funnel-fill me-1"></i> Apply Filters
+              <button type="submit" class="btn w-100">
+                <span>Apply Filters</span>
               </button>
-              <a href="{% url 'items:index' %}" class="btn btn-outline-secondary" title="Reset Filters">
-                <i class="bi bi-arrow-counterclockwise"></i>
+              <a href="{% url 'items:index' %}" class="btn btn-outline" title="Reset Filters">
+                <span>Reset</span>
               </a>
             </div>
 
@@ -130,8 +135,8 @@
       </div>
       {% if current_query or current_type or current_category or current_location or current_status or current_date_from or current_date_to %}
         <div>
-          <a href="{% url 'items:index' %}" class="badge bg-light text-secondary text-decoration-none border px-2 py-1">
-            <i class="bi bi-x me-1"></i>Clear all filters
+          <a href="{% url 'items:index' %}" class="badge bg-white text-dark border px-3 py-1 text-decoration-none">
+            Clear all filters
           </a>
         </div>
       {% endif %}
@@ -142,35 +147,38 @@
       <div class="row g-4 mb-4">
         {% for item in items %}
           <div class="col-lg-4 col-md-6">
-            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden hover-card bg-white position-relative">
+            <div class="card border border-1 rounded-4 h-100 overflow-hidden bg-white position-relative" style="border-color: var(--border-light);">
               
               <!-- Image Banner or Placeholder -->
-              <div class="position-relative bg-light" style="height: 200px; overflow: hidden;">
+              <div class="position-relative bg-light" style="height: 190px; overflow: hidden; background-color: var(--green-subtle) !important;">
                 {% if item.image %}
                   <img src="{{ item.image.url }}" alt="{{ item.title }}" class="w-100 h-100" style="object-fit: cover;">
                 {% else %}
-                  <div class="w-100 h-100 d-flex flex-column align-items-center justify-content-center text-muted bg-light">
-                    <i class="bi {% if item.is_lost %}bi-search{% else %}bi-box-seam{% endif %} fs-1 mb-2 opacity-50"></i>
-                    <span class="small">No photograph attached</span>
+                  <div class="w-100 h-100 d-flex flex-column align-items-center justify-content-center text-muted">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mb-2 opacity-75">
+                      <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                      <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                    </svg>
+                    <span class="small text-dark fw-semibold">No photograph attached</span>
                   </div>
                 {% endif %}
 
-                <!-- Badges over Image -->
+                <!-- Badges over Image: Green & White Theme -->
                 <div class="position-absolute top-0 start-0 m-3 d-flex gap-1">
                   {% if item.is_lost %}
-                    <span class="badge bg-danger shadow-sm text-uppercase fw-bold" style="font-size: 0.72rem;">Lost</span>
+                    <span class="badge bg-white text-dark border border-dark text-uppercase fw-bold">Lost</span>
                   {% else %}
-                    <span class="badge bg-success shadow-sm text-uppercase fw-bold" style="font-size: 0.72rem;">Found</span>
+                    <span class="badge border text-uppercase fw-bold" style="background-color: var(--green-primary); color: #ffffff;">Found</span>
                   {% endif %}
 
                   {% if item.is_open %}
-                    <span class="badge bg-primary shadow-sm text-uppercase" style="font-size: 0.72rem;">Open</span>
+                    <span class="badge border" style="background-color: var(--green-light); color: var(--green-hover);">Open</span>
                   {% elif item.is_claim_pending %}
-                    <span class="badge bg-warning text-dark shadow-sm text-uppercase" style="font-size: 0.72rem;">Claim Pending</span>
+                    <span class="badge bg-white text-dark border">Claim Pending</span>
                   {% elif item.is_resolved %}
-                    <span class="badge bg-success shadow-sm text-uppercase" style="font-size: 0.72rem;">Resolved</span>
+                    <span class="badge border" style="background-color: var(--green-primary); color: #ffffff;">Resolved</span>
                   {% elif item.is_closed %}
-                    <span class="badge bg-secondary shadow-sm text-uppercase" style="font-size: 0.72rem;">Closed</span>
+                    <span class="badge bg-light text-muted border">Closed</span>
                   {% endif %}
                 </div>
               </div>
@@ -178,16 +186,16 @@
               <!-- Card Body -->
               <div class="card-body p-4 d-flex flex-column">
                 <div class="d-flex justify-content-between align-items-start mb-2">
-                  <span class="badge bg-light text-primary border" style="font-size: 0.75rem;">
-                    <i class="bi bi-tag-fill me-1"></i>{{ item.category.name }}
+                  <span class="badge border" style="background-color: var(--green-subtle); color: var(--green-hover); border-color: var(--green-border) !important;">
+                    {{ item.category.name }}
                   </span>
                   <small class="text-muted">
-                    <i class="bi bi-calendar-event me-1"></i>{{ item.date_lost_or_found|date:"M d, Y" }}
+                    {{ item.date_lost_or_found|date:"M d, Y" }}
                   </small>
                 </div>
 
                 <h5 class="fw-bold mb-2">
-                  <a href="{{ item.get_absolute_url }}" class="text-dark text-decoration-none stretched-link">
+                  <a href="{{ item.get_absolute_url }}" class="text-dark text-decoration-none stretched-link" style="font-family: Arial, sans-serif;">
                     {{ item.title }}
                   </a>
                 </h5>
@@ -198,10 +206,14 @@
 
                 <div class="pt-3 border-top d-flex justify-content-between align-items-center small text-muted">
                   <span class="text-truncate" style="max-width: 170px;">
-                    <i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ item.location.name }}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                      <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                    {{ item.location.name }}
                   </span>
                   <span>
-                    <i class="bi bi-person me-1"></i>{{ item.reporter_display_name }}
+                    {{ item.reporter_display_name }}
                   </span>
                 </div>
               </div>
@@ -217,8 +229,8 @@
           <ul class="pagination justify-content-center">
             {% if page_obj.has_previous %}
               <li class="page-item">
-                <a class="page-link" href="?{% query_transform page=page_obj.previous_page_number %}" aria-label="Previous">
-                  <span aria-hidden="true">&laquo;</span>
+                <a class="page-link text-dark" href="?{% query_transform page=page_obj.previous_page_number %}" aria-label="Previous">
+                  &laquo;
                 </a>
               </li>
             {% else %}
@@ -228,19 +240,19 @@
             {% for num in paginator.page_range %}
               {% if page_obj.number == num %}
                 <li class="page-item active" aria-current="page">
-                  <span class="page-link" style="background-color: var(--navy-primary); border-color: var(--navy-primary);">{{ num }}</span>
+                  <span class="page-link text-dark fw-bold" style="background-color: var(--green-primary); border-color: var(--green-primary);">{{ num }}</span>
                 </li>
               {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
                 <li class="page-item">
-                  <a class="page-link" href="?{% query_transform page=num %}">{{ num }}</a>
+                  <a class="page-link text-dark" href="?{% query_transform page=num %}">{{ num }}</a>
                 </li>
               {% endif %}
             {% endfor %}
 
             {% if page_obj.has_next %}
               <li class="page-item">
-                <a class="page-link" href="?{% query_transform page=page_obj.next_page_number %}" aria-label="Next">
-                  <span aria-hidden="true">&raquo;</span>
+                <a class="page-link text-dark" href="?{% query_transform page=page_obj.next_page_number %}" aria-label="Next">
+                  &raquo;
                 </a>
               </li>
             {% else %}
@@ -252,15 +264,18 @@
 
     {% else %}
       <!-- Empty State -->
-      <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white my-4">
-        <div class="mb-3 text-muted">
-          <i class="bi bi-inbox fs-1"></i>
+      <div class="card border border-1 rounded-4 p-5 text-center bg-white my-4" style="border-color: var(--border-light);">
+        <div class="mb-3">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline>
+            <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path>
+          </svg>
         </div>
-        <h4 class="fw-bold text-dark mb-1">No Matching Items Found</h4>
+        <h4 class="fw-bold text-dark mb-1" style="font-family: Arial, sans-serif;">No Matching Items Found</h4>
         <p class="text-muted small mb-4">We couldn't find any lost or found items matching your current search filters.</p>
         <div>
-          <a href="{% url 'items:index' %}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
-            <i class="bi bi-arrow-counterclockwise me-1"></i> Clear Filters
+          <a href="{% url 'items:index' %}" class="btn">
+            <span>Clear Filters</span>
           </a>
         </div>
       </div>
@@ -269,4 +284,3 @@
   </div>
 </section>
 {% endblock %}
-

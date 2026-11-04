@@ -9,6 +9,7 @@ from apps.accounts.permissions import (
     StudentRequiredMixin,
     SuperAdminRequiredMixin,
 )
+from apps.claims.models import Claim, ClaimStatus
 from apps.items.models import CampusLocation, Category, Item
 from apps.matching.models import PotentialMatch
 
@@ -55,6 +56,14 @@ class StudentDashboardView(StudentRequiredMixin, TemplateView):
             Q(found_item__status__in=[Item.ItemStatus.RESOLVED, Item.ItemStatus.CLOSED])
         )
 
+        # Phase 4 Claims for student
+        user_claims = Claim.objects.filter(claimant=user).select_related("item", "item__category")
+        claims_count = user_claims.count()
+        active_claims_count = user_claims.filter(
+            status__in=[ClaimStatus.PENDING, ClaimStatus.UNDER_REVIEW]
+        ).count()
+        recent_claims = user_claims.order_by("-created_at")[:5]
+
         context.update({
             "page_title": "Student Dashboard",
             "active_tab": "dashboard",
@@ -65,6 +74,9 @@ class StudentDashboardView(StudentRequiredMixin, TemplateView):
             "resolved_reports": counts["resolved"] or 0,
             "potential_matches_count": student_matches.count(),
             "recent_reports": recent_reports,
+            "claims_count": claims_count,
+            "active_claims_count": active_claims_count,
+            "recent_claims": recent_claims,
         })
         return context
 
@@ -94,6 +106,12 @@ class AdminDashboardView(AdminRequiredMixin, TemplateView):
         # Phase 3 AI Matches counts for admin operations
         platform_matches = PotentialMatch.objects.all()
 
+        # Phase 4 Claims queue metrics
+        total_claims_count = Claim.objects.count()
+        pending_claims_count = Claim.objects.filter(
+            status__in=[ClaimStatus.PENDING, ClaimStatus.UNDER_REVIEW]
+        ).count()
+
         context.update({
             "page_title": "Administrator Operations Console",
             "active_tab": "admin_dashboard",
@@ -107,6 +125,8 @@ class AdminDashboardView(AdminRequiredMixin, TemplateView):
             "locations_count": CampusLocation.objects.count(),
             "total_matches_count": platform_matches.count(),
             "high_confidence_matches_count": platform_matches.filter(final_score__gte=0.70).count(),
+            "total_claims_count": total_claims_count,
+            "pending_claims_count": pending_claims_count,
             "recent_items": recent_items,
         })
         return context

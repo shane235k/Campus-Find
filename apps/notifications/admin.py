@@ -1,5 +1,11 @@
-"""Admin configuration for notifications app.
+"""Django admin configuration for notifications."""
+from django.contrib import admin
+from .models import Notification
 
-Admin registrations are scheduled for implementation in Phase 5.
-"""
-from django.contrib import admin  # noqa: F401
+
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ("title", "recipient", "notification_type", "is_read", "created_at")
+    list_filter = ("notification_type", "is_read", "created_at")
+    search_fields = ("title", "message", "recipient__username", "recipient__email")
+    readonly_fields = ("id", "created_at")

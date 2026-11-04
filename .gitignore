@@ -24,6 +24,8 @@ media/item_images/**
 !media/item_images/.gitkeep
 media/profile_pics/**
 !media/profile_pics/.gitkeep
+media/claim_evidence/**
+!media/claim_evidence/.gitkeep
 
 # IDE & OS files
 .vscode/
@@ -32,6 +34,7 @@ media/profile_pics/**
 *.swo
 .DS_Store
 Thumbs.db
+~$*.docx
 
 # Build artifacts
 build/

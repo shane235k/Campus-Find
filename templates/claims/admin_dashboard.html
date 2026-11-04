@@ -1,0 +1,314 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin Claims Moderation — Campus Lost &amp; Found Hub{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Top Navigation & Header -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+    <div>
+      <h2 class="fw-bold mb-0 d-flex align-items-center gap-2" style="color: #166534;">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+        Ownership Claims Queue
+      </h2>
+      <p class="text-muted small mb-0">Evaluate student verification proof, inspect confidential evidence, and approve physical handovers.</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <a href="{% url 'dashboard:admin' %}" class="btn btn-sm px-3">
+        Staff Console
+      </a>
+      <a href="{% url 'matching:hub' %}" class="btn btn-sm px-3">
+        AI Matching Hub
+      </a>
+      <a href="{% url 'claims:my_claims' %}" class="btn btn-sm px-3">
+        Student View
+      </a>
+    </div>
+  </div>
+
+  <!-- Operational Telemetry Metric Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-lg-2">
+      <div class="card border border-success-subtle shadow-sm rounded-4 p-3 bg-white h-100">
+        <div class="text-muted small fw-semibold">Total Claims</div>
+        <div class="fs-4 fw-bold" style="color: #166534;">{{ total_count }}</div>
+        <small class="text-muted" style="font-size: 0.72rem;">All historical filings</small>
+      </div>
+    </div>
+
+    <div class="col-6 col-lg-2">
+      <div class="card border border-success-subtle shadow-sm rounded-4 p-3 bg-white h-100">
+        <div class="text-muted small fw-semibold">Pending Review</div>
+        <div class="fs-4 fw-bold text-dark">{{ pending_count }}</div>
+        <small class="text-muted" style="font-size: 0.72rem;">Awaiting first look</small>
+      </div>
+    </div>
+
+    <div class="col-6 col-lg-2">
+      <div class="card border border-success-subtle shadow-sm rounded-4 p-3 bg-white h-100">
+        <div class="text-muted small fw-semibold">Under Review</div>
+        <div class="fs-4 fw-bold" style="color: #166534;">{{ under_review_count }}</div>
+        <small class="text-muted" style="font-size: 0.72rem;">Desk investigating</small>
+      </div>
+    </div>
+
+    <div class="col-6 col-lg-2">
+      <div class="card border border-success-subtle shadow-sm rounded-4 p-3 bg-white h-100">
+        <div class="text-muted small fw-semibold">Approved</div>
+        <div class="fs-4 fw-bold text-success">{{ approved_count }}</div>
+        <small class="text-muted" style="font-size: 0.72rem;">Verified owners</small>
+      </div>
+    </div>
+
+    <div class="col-6 col-lg-2">
+      <div class="card border border-success-subtle shadow-sm rounded-4 p-3 bg-white h-100">
+        <div class="text-muted small fw-semibold">Rejected</div>
+        <div class="fs-4 fw-bold text-secondary">{{ rejected_count }}</div>
+        <small class="text-muted" style="font-size: 0.72rem;">Failed verification</small>
+      </div>
+    </div>
+
+    <div class="col-6 col-lg-2">
+      <div class="card border border-success-subtle shadow-sm rounded-4 p-3 bg-white h-100">
+        <div class="text-muted small fw-semibold">Withdrawn</div>
+        <div class="fs-4 fw-bold text-secondary">{{ withdrawn_count }}</div>
+        <small class="text-muted" style="font-size: 0.72rem;">Cancelled by student</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter & Search Toolbar (With Status Filter Pills) -->
+  <div class="card border border-success-subtle shadow-sm rounded-4 bg-white p-3 mb-4">
+    <div class="row g-3 align-items-center">
+      <div class="col-lg-5">
+        <form method="get" class="d-flex gap-2">
+          {% if current_status %}
+            <input type="hidden" name="status" value="{{ current_status }}">
+          {% endif %}
+          <input type="text" name="q" value="{{ search_query }}" class="form-control" placeholder="Search claimant, email, item title, or proof...">
+          <button type="submit" class="btn btn-sm px-3">Search</button>
+          {% if search_query %}
+            <a href="{% url 'claims:admin_dashboard' %}{% if current_status %}?status={{ current_status }}{% endif %}" class="btn btn-sm" title="Clear search text">Reset</a>
+          {% endif %}
+        </form>
+      </div>
+
+      <div class="col-lg-7">
+        <div class="d-flex flex-wrap align-items-center gap-2 justify-content-lg-end">
+          <span class="text-muted small fw-semibold me-1">Status Filter:</span>
+
+          {% if current_status %}
+            <!-- Selected Filter comes to FRONT OF THE LINE with 'x' button on left -->
+            {% for val, label in claim_statuses %}
+              {% if val == current_status %}
+                <a href="{% url 'claims:admin_dashboard' %}{% if search_query %}?q={{ search_query }}{% endif %}" 
+                   class="claim-filter-pill is-active" 
+                   title="Remove {{ label }} filter">
+                  <span class="filter-remove-x" aria-hidden="true">&times;</span>
+                  <span>{{ label }}</span>
+                </a>
+              {% endif %}
+            {% endfor %}
+
+            <!-- Remaining unselected statuses -->
+            {% for val, label in claim_statuses %}
+              {% if val != current_status %}
+                <a href="{% url 'claims:admin_dashboard' %}?status={{ val }}{% if search_query %}&q={{ search_query }}{% endif %}" 
+                   class="claim-filter-pill">
+                  <span>{{ label }}</span>
+                </a>
+              {% endif %}
+            {% endfor %}
+
+          {% else %}
+            <!-- Default (No Filter): All Statuses active -->
+            <a href="{% url 'claims:admin_dashboard' %}{% if search_query %}?q={{ search_query }}{% endif %}" 
+               class="claim-filter-pill is-active">
+              <span>All Statuses ({{ total_count }})</span>
+            </a>
+
+            {% for val, label in claim_statuses %}
+              <a href="{% url 'claims:admin_dashboard' %}?status={{ val }}{% if search_query %}&q={{ search_query }}{% endif %}" 
+                 class="claim-filter-pill">
+                <span>{{ label }}</span>
+              </a>
+            {% endfor %}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Claims Queue Table -->
+  <div class="card border border-success-subtle shadow-sm rounded-4 bg-white overflow-hidden mb-4">
+    <div class="table-responsive">
+      <table class="table align-middle table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th scope="col" class="ps-4">Claim Ref &amp; Item</th>
+            <th scope="col">Claimant (Student)</th>
+            <th scope="col">Date Submitted</th>
+            <th scope="col">Evidence</th>
+            <th scope="col">Status</th>
+            <th scope="col">Assigned Reviewer</th>
+            <th scope="col" class="text-end pe-4">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for claim in claims %}
+            <tr>
+              <!-- Claim & Item Details -->
+              <td class="ps-4">
+                <div class="d-flex align-items-center gap-3">
+                  {% if claim.item.image %}
+                    <img src="{{ claim.item.image.url }}" alt="{{ claim.item.title }}" class="rounded shadow-sm" style="width: 48px; height: 48px; object-fit: cover;">
+                  {% else %}
+                    <div class="bg-light rounded d-flex align-items-center justify-content-center text-muted border" style="width: 48px; height: 48px;">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                    </div>
+                  {% endif %}
+                  <div>
+                    <h6 class="fw-bold mb-0">
+                      <a href="{% url 'claims:admin_review' claim.id %}" class="text-decoration-none" style="color: #166534;">
+                        {{ claim.item.title }}
+                      </a>
+                    </h6>
+                    <div class="d-flex align-items-center gap-2 mt-1">
+                      <span class="badge bg-light text-dark border font-monospace" style="font-size: 0.7rem;">#{{ claim.id|stringformat:".8s" }}</span>
+                      <span class="text-muted small" style="font-size: 0.75rem;">{{ claim.item.category.name }}</span>
+                    </div>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Claimant -->
+              <td>
+                <div class="fw-semibold text-dark">{{ claim.claimant.get_full_name|default:claim.claimant.username }}</div>
+                <div class="text-muted small" style="font-size: 0.75rem;">
+                  {{ claim.claimant.email }}
+                </div>
+                {% if claim.claimant.student_id %}
+                  <div class="text-muted small" style="font-size: 0.72rem;">
+                    ID: {{ claim.claimant.student_id }}
+                  </div>
+                {% endif %}
+              </td>
+
+              <!-- Submitted At -->
+              <td>
+                <span class="small text-dark">{{ claim.created_at|date:"M d, Y" }}</span>
+                <span class="d-block text-muted" style="font-size: 0.72rem;">{{ claim.created_at|time:"H:i" }}</span>
+              </td>
+
+              <!-- Evidence Indicator -->
+              <td>
+                {% if claim.evidence_file %}
+                  <span class="badge rounded-pill px-2 py-1 small" style="background-color: #dcfce7; color: #14532d; font-weight: 600;">
+                    File Attached
+                  </span>
+                {% else %}
+                  <span class="badge bg-light text-muted border rounded-pill px-2 py-1 small">
+                    Text Only
+                  </span>
+                {% endif %}
+                {% if claim.potential_match %}
+                  <div class="mt-1">
+                    <span class="badge rounded-pill px-2 py-0 small" style="font-size: 0.68rem; background-color: #f0fdf4; color: #166534; border: 1px solid #bbf7d0;">
+                      AI Match
+                    </span>
+                  </div>
+                {% endif %}
+              </td>
+
+              <!-- Status Badge -->
+              <td>
+                {% if claim.status == 'APPROVED' %}
+                  <span class="badge rounded-pill px-3 py-1" style="background-color: #dcfce7; color: #14532d; font-weight: 600;">Approved</span>
+                {% elif claim.status == 'UNDER_REVIEW' %}
+                  <span class="badge rounded-pill px-3 py-1" style="background-color: #f0fdf4; color: #166534; border: 1px solid #bbf7d0;">Under Review</span>
+                {% elif claim.status == 'REJECTED' %}
+                  <span class="badge bg-danger-subtle text-danger rounded-pill px-3 py-1">Rejected</span>
+                {% elif claim.status == 'WITHDRAWN' %}
+                  <span class="badge bg-light text-muted border rounded-pill px-3 py-1">Withdrawn</span>
+                {% else %}
+                  <span class="badge rounded-pill px-3 py-1" style="background-color: #dcfce7; color: #14532d;">Pending</span>
+                {% endif %}
+              </td>
+
+              <!-- Reviewer -->
+              <td>
+                {% if claim.reviewed_by %}
+                  <span class="small fw-semibold text-dark">{{ claim.reviewed_by.get_full_name|default:claim.reviewed_by.username }}</span>
+                  <span class="d-block text-muted" style="font-size: 0.72rem;">{{ claim.reviewed_at|date:"M d, H:i" }}</span>
+                {% else %}
+                  <span class="text-muted small fst-italic">Unassigned</span>
+                {% endif %}
+              </td>
+
+              <!-- Actions -->
+              <td class="text-end pe-4">
+                <a href="{% url 'claims:admin_review' claim.id %}" class="btn btn-sm px-3">
+                  Review Evidence
+                </a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="7" class="text-center py-5">
+                <div class="py-4">
+                  <h5 class="fw-bold" style="color: #166534;">No ownership claims found</h5>
+                  <p class="text-muted small mb-0">
+                    {% if current_status or search_query %}
+                      Try clearing your search query or status filter to see other claims.
+                    {% else %}
+                      No claims have been submitted by students yet.
+                    {% endif %}
+                  </p>
+                  {% if current_status or search_query %}
+                    <a href="{% url 'claims:admin_dashboard' %}" class="btn btn-sm mt-3">
+                      Clear Filters
+                    </a>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+      <div class="card-footer bg-white border-top p-3 d-flex justify-content-between align-items-center">
+        <span class="text-muted small">
+          Showing page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }} ({{ paginator.count }} total claims)
+        </span>
+        <nav aria-label="Page navigation">
+          <ul class="pagination pagination-sm mb-0">
+            {% if page_obj.has_previous %}
+              <li class="page-item">
+                <a class="page-link rounded-pill me-1 px-3" href="?page={{ page_obj.previous_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}">
+                  Previous
+                </a>
+              </li>
+            {% endif %}
+
+            <li class="page-item active">
+              <span class="page-link rounded-pill px-3" style="background-color: #15803d; border-color: #15803d; color: #ffffff; font-family: Arial, sans-serif; font-weight: 600;">{{ page_obj.number }}</span>
+            </li>
+
+            {% if page_obj.has_next %}
+              <li class="page-item">
+                <a class="page-link rounded-pill ms-1 px-3" href="?page={{ page_obj.next_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}">
+                  Next
+                </a>
+              </li>
+            {% endif %}
+          </ul>
+        </nav>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

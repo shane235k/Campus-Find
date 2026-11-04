@@ -4,27 +4,27 @@
 {% block title %}Super Admin Command Center — Campus Lost &amp; Found Hub{% endblock %}
 
 {% block content %}
-<section class="py-4" style="background-color: var(--bg-main); min-height: 85vh;">
+<section class="py-4" style="background-color: #ffffff; min-height: 85vh;">
   <div class="container">
     
     <!-- Welcome Header Banner -->
-    <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
+    <div class="card border border-success-subtle shadow-sm rounded-4 mb-4 overflow-hidden" style="background: linear-gradient(135deg, #15803d 0%, #166534 100%);">
       <div class="card-body p-4 p-md-5 text-white">
         <div class="row align-items-center g-3">
-          <div class="col-md-8">
+          <div class="col-md-7">
             <div class="d-flex align-items-center gap-2 mb-2">
-              <span class="badge bg-danger text-uppercase fw-bold" style="font-size: 0.7rem; letter-spacing: 0.05em;">Super Admin</span>
-              <span class="badge bg-white bg-opacity-20 text-white" style="font-size: 0.7rem;">System Command Center</span>
+              <span class="badge bg-white text-dark text-uppercase fw-bold" style="font-size: 0.75rem; letter-spacing: 0.05em; font-family: Arial, sans-serif;">Super Admin</span>
+              <span class="badge bg-white bg-opacity-25 text-white" style="font-size: 0.75rem;">System Command Center</span>
             </div>
-            <h2 class="fw-bold mb-1">{{ user.get_full_name|default:user.username }}</h2>
-            <p class="text-white-50 mb-0">System administration, access governance, and campus-wide oversight.</p>
+            <h2 class="fw-bold mb-1" style="color: #ffffff;">{{ user.get_full_name|default:user.username }}</h2>
+            <p class="mb-0 small" style="color: #dcfce7;">System administration, access governance, and campus-wide oversight.</p>
           </div>
-          <div class="col-md-4 text-md-end">
-            <a href="{% url 'accounts:create_admin' %}" class="btn btn-success btn-sm rounded-pill px-3 py-2 fw-semibold shadow-sm me-2">
-              <i class="bi bi-person-plus-fill me-1"></i> Provision Staff Admin
+          <div class="col-md-5 text-md-end">
+            <a href="{% url 'accounts:create_admin' %}" class="btn btn-sm px-3 py-2 shadow-sm me-2">
+              Provision Staff Admin
             </a>
-            <a href="/admin/" target="_blank" class="btn btn-outline-light btn-sm rounded-pill px-3 py-2 fw-semibold">
-              <i class="bi bi-gear-fill me-1"></i> Admin Site
+            <a href="/admin/" target="_blank" class="btn btn-sm px-3 py-2">
+              Admin Site
             </a>
           </div>
         </div>
@@ -34,11 +34,11 @@
     <!-- System User Governance Metrics -->
     <div class="row g-3 mb-4">
       <div class="col-6 col-lg-3">
-        <div class="card border-0 shadow-sm rounded-4 h-100 p-3 bg-white">
+        <div class="card border border-success-subtle shadow-sm rounded-4 h-100 p-3 bg-white">
           <div class="d-flex align-items-center justify-content-between mb-2">
             <span class="text-muted small fw-semibold">Total Accounts</span>
-            <div class="rounded-3 bg-primary-subtle p-2 text-primary">
-              <i class="bi bi-people-fill fs-5"></i>
+            <div class="rounded-3 p-2 d-flex align-items-center justify-content-center" style="background-color: #f0fdf4;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
             </div>
           </div>
           <h3 class="fw-bold mb-0 text-dark">{{ total_users|default:"0" }}</h3>
@@ -47,11 +47,11 @@
       </div>
 
       <div class="col-6 col-lg-3">
-        <div class="card border-0 shadow-sm rounded-4 h-100 p-3 bg-white">
+        <div class="card border border-success-subtle shadow-sm rounded-4 h-100 p-3 bg-white">
           <div class="d-flex align-items-center justify-content-between mb-2">
             <span class="text-muted small fw-semibold">Student Accounts</span>
-            <div class="rounded-3 bg-info-subtle p-2 text-info">
-              <i class="bi bi-mortarboard-fill fs-5"></i>
+            <div class="rounded-3 p-2 d-flex align-items-center justify-content-center" style="background-color: #f0fdf4;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
             </div>
           </div>
           <h3 class="fw-bold mb-0 text-dark">{{ student_count|default:"0" }}</h3>
@@ -60,11 +60,11 @@
       </div>
 
       <div class="col-6 col-lg-3">
-        <div class="card border-0 shadow-sm rounded-4 h-100 p-3 bg-white">
+        <div class="card border border-success-subtle shadow-sm rounded-4 h-100 p-3 bg-white">
           <div class="d-flex align-items-center justify-content-between mb-2">
             <span class="text-muted small fw-semibold">Staff Admins</span>
-            <div class="rounded-3 bg-warning-subtle p-2 text-warning">
-              <i class="bi bi-shield-check fs-5"></i>
+            <div class="rounded-3 p-2 d-flex align-items-center justify-content-center" style="background-color: #f0fdf4;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
             </div>
           </div>
           <h3 class="fw-bold mb-0 text-dark">{{ admin_count|default:"0" }}</h3>
@@ -73,15 +73,15 @@
       </div>
 
       <div class="col-6 col-lg-3">
-        <div class="card border-0 shadow-sm rounded-4 h-100 p-3 bg-white">
+        <div class="card border border-success-subtle shadow-sm rounded-4 h-100 p-3 bg-white">
           <div class="d-flex align-items-center justify-content-between mb-2">
             <span class="text-muted small fw-semibold">Engine Health</span>
-            <div class="rounded-3 bg-success-subtle p-2 text-success">
-              <i class="bi bi-activity fs-5"></i>
+            <div class="rounded-3 p-2 d-flex align-items-center justify-content-center" style="background-color: #f0fdf4;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
             </div>
           </div>
           <h3 class="fw-bold mb-0 text-success">Active</h3>
-          <small class="text-muted">Neon DB &amp; pgvector ready</small>
+          <small class="text-muted">PostgreSQL &amp; pgvector ready</small>
         </div>
       </div>
     </div>
@@ -89,36 +89,30 @@
     <!-- Governance Actions & Tools -->
     <div class="row g-4">
       <div class="col-lg-8">
-        <div class="card border-0 shadow-sm rounded-4 bg-white mb-4">
+        <div class="card border border-success-subtle shadow-sm rounded-4 bg-white mb-4">
           <div class="card-header bg-white border-bottom p-4 d-flex justify-content-between align-items-center">
-            <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-shield-shaded me-2 text-primary"></i>Administrative Control Center</h5>
-            <a href="{% url 'accounts:create_admin' %}" class="btn btn-outline-success btn-sm rounded-pill">
-              <i class="bi bi-plus-circle me-1"></i> Add Administrator
+            <h5 class="fw-bold mb-0" style="color: #166534;">Administrative Control Center</h5>
+            <a href="{% url 'accounts:create_admin' %}" class="btn btn-sm">
+              Add Administrator
             </a>
           </div>
           <div class="card-body p-4">
             <div class="row g-3">
               <div class="col-md-6">
-                <div class="p-3 border rounded-3 h-100">
-                  <div class="d-flex align-items-center gap-2 mb-2">
-                    <i class="bi bi-person-fill-lock fs-4 text-warning"></i>
-                    <h6 class="fw-bold mb-0">Staff Access Provisioning</h6>
-                  </div>
+                <div class="p-3 border border-success-subtle rounded-3 h-100 bg-white">
+                  <h6 class="fw-bold mb-2" style="color: #166534;">Staff Access Provisioning</h6>
                   <p class="text-muted small mb-3">Provision authorized administrative accounts for campus security, facility leads, and library desk staff.</p>
-                  <a href="{% url 'accounts:create_admin' %}" class="btn btn-sm btn-primary rounded-pill" style="background-color: var(--navy-primary); border-color: var(--navy-primary);">
+                  <a href="{% url 'accounts:create_admin' %}" class="btn btn-sm">
                     Launch Provisioning Form
                   </a>
                 </div>
               </div>
 
               <div class="col-md-6">
-                <div class="p-3 border rounded-3 h-100">
-                  <div class="d-flex align-items-center gap-2 mb-2">
-                    <i class="bi bi-database-fill-gear fs-4 text-primary"></i>
-                    <h6 class="fw-bold mb-0">Database &amp; User Records</h6>
-                  </div>
+                <div class="p-3 border border-success-subtle rounded-3 h-100 bg-white">
+                  <h6 class="fw-bold mb-2" style="color: #166534;">Database &amp; User Records</h6>
                   <p class="text-muted small mb-3">Inspect registered users, manage permissions, and audit account states via the Django administration interface.</p>
-                  <a href="/admin/accounts/campususer/" target="_blank" class="btn btn-sm btn-outline-secondary rounded-pill">
+                  <a href="/admin/accounts/campususer/" target="_blank" class="btn btn-sm">
                     View Users in Admin
                   </a>
                 </div>
@@ -128,18 +122,18 @@
         </div>
 
         <!-- Security & Audit Info -->
-        <div class="card border-0 shadow-sm rounded-4 bg-white">
+        <div class="card border border-success-subtle shadow-sm rounded-4 bg-white">
           <div class="card-header bg-white border-bottom p-4">
-            <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-shield-check me-2 text-success"></i>Security &amp; Rate-Limiting Policy</h5>
+            <h5 class="fw-bold mb-0" style="color: #166534;">Security &amp; Rate-Limiting Policy</h5>
           </div>
           <div class="card-body p-4 small text-muted">
             <div class="row g-3">
               <div class="col-sm-6">
-                <div class="fw-semibold text-dark mb-1"><i class="bi bi-stopwatch text-danger me-1"></i> Brute-Force Throttling</div>
+                <div class="fw-semibold text-dark mb-1">Brute-Force Throttling</div>
                 <div>Configured to lockout after 5 consecutive failed authentication attempts within a 15-minute sliding window.</div>
               </div>
               <div class="col-sm-6">
-                <div class="fw-semibold text-dark mb-1"><i class="bi bi-at text-primary me-1"></i> University Domain Gate</div>
+                <div class="fw-semibold text-dark mb-1">University Domain Gate</div>
                 <div>Strict domain whitelist validation on all self-service student registrations via <code>UNIVERSITY_EMAIL_DOMAINS</code>.</div>
               </div>
             </div>
@@ -149,23 +143,23 @@
 
       <!-- Quick Links Sidebar -->
       <div class="col-lg-4">
-        <div class="card border-0 shadow-sm rounded-4 bg-white mb-4">
+        <div class="card border border-success-subtle shadow-sm rounded-4 bg-white mb-4">
           <div class="card-header bg-white border-bottom p-4">
-            <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-speedometer me-2 text-primary"></i>System Navigation</h6>
+            <h6 class="fw-bold mb-0" style="color: #166534;">System Navigation</h6>
           </div>
           <div class="card-body p-4">
             <div class="d-grid gap-2">
-              <a href="{% url 'dashboard:admin' %}" class="btn btn-light text-start py-2 px-3 rounded-3 border">
-                <i class="bi bi-person-badge me-2 text-warning"></i> Switch to Moderator View
+              <a href="{% url 'dashboard:admin' %}" class="btn w-100 text-start py-2 px-3">
+                Switch to Moderator View
               </a>
-              <a href="{% url 'dashboard:student' %}" class="btn btn-light text-start py-2 px-3 rounded-3 border">
-                <i class="bi bi-mortarboard me-2 text-primary"></i> Switch to Student View
+              <a href="{% url 'dashboard:student' %}" class="btn w-100 text-start py-2 px-3">
+                Switch to Student View
               </a>
-              <a href="/admin/" target="_blank" class="btn btn-light text-start py-2 px-3 rounded-3 border">
-                <i class="bi bi-lock me-2 text-danger"></i> Complete Django Admin
+              <a href="/admin/" target="_blank" class="btn w-100 text-start py-2 px-3">
+                Complete Django Admin
               </a>
-              <a href="{% url 'accounts:profile' %}" class="btn btn-light text-start py-2 px-3 rounded-3 border">
-                <i class="bi bi-person-gear me-2 text-secondary"></i> Super Admin Profile
+              <a href="{% url 'accounts:profile' %}" class="btn w-100 text-start py-2 px-3">
+                Super Admin Profile
               </a>
             </div>
           </div>
@@ -176,4 +170,3 @@
   </div>
 </section>
 {% endblock %}
-

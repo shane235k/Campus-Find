@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }} — Campus Lost &amp; Found Hub{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Breadcrumbs -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'items:list' %}" class="text-decoration-none" style="color: #15803d;">Items Catalog</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'items:detail' item.id %}" class="text-decoration-none" style="color: #15803d;">{{ item.title|truncatechars:25 }}</a></li>
+      <li class="breadcrumb-item active" aria-current="page">File Ownership Claim</li>
+    </ol>
+  </nav>
+
+  <div class="row g-4 justify-content-center">
+    <!-- Left Column: Item Overview & Verification Guidelines -->
+    <div class="col-lg-4">
+      <div class="card border border-success-subtle shadow-sm rounded-4 bg-white overflow-hidden mb-4">
+        <div class="p-3 text-white" style="background: linear-gradient(135deg, #15803d 0%, #166534 100%);">
+          <h6 class="fw-bold mb-0 d-flex align-items-center gap-2">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+            Item Being Claimed
+          </h6>
+        </div>
+        <div class="card-body p-4">
+          <div class="text-center mb-3">
+            {% if item.image %}
+              <img src="{{ item.image.url }}" alt="{{ item.title }}" class="rounded-3 shadow-sm img-fluid" style="max-height: 180px; object-fit: contain;">
+            {% else %}
+              <div class="bg-light rounded-3 d-flex align-items-center justify-content-center text-muted border mx-auto" style="height: 140px; width: 140px;">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+              </div>
+            {% endif %}
+          </div>
+
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <span class="badge rounded-pill px-2 py-1" style="background-color: #dcfce7; color: #14532d; font-weight: 600;">{{ item.get_item_type_display }}</span>
+            <span class="badge bg-light text-dark border">{{ item.category.name }}</span>
+          </div>
+
+          <h5 class="fw-bold text-dark mb-2">{{ item.title }}</h5>
+          <p class="text-muted small mb-3">{{ item.description|truncatechars:140 }}</p>
+
+          <div class="border-top pt-2 small text-muted">
+            <div class="mb-1 d-flex align-items-center gap-1">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+              {{ item.location.name }}
+            </div>
+            <div class="d-flex align-items-center gap-1">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              Logged {{ item.date_lost_or_found|date:"M d, Y" }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Confidentiality Assurance Box -->
+      <div class="card border border-success-subtle shadow-sm rounded-4 p-4 bg-white border-start border-4 border-success">
+        <div class="d-flex align-items-center gap-2 mb-2" style="color: #166534;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          <h6 class="fw-bold mb-0">Confidentiality Guarantee</h6>
+        </div>
+        <p class="small text-secondary mb-0">
+          Your verification answers and uploaded evidence are strictly confidential. They are accessible <strong>only to verified campus administrators</strong> and are never exposed in public listings or search queries.
+        </p>
+      </div>
+    </div>
+
+    <!-- Right Column: Verification Claim Form -->
+    <div class="col-lg-8">
+      <div class="card border border-success-subtle shadow-sm rounded-4 bg-white p-4 p-md-5">
+        <div class="d-flex align-items-center gap-2 mb-1">
+          <span class="badge rounded-pill px-3 py-1 text-uppercase" style="background-color: #dcfce7; color: #14532d; font-weight: 600; font-size: 0.75rem;">Phase 4 &bull; Ownership Verification</span>
+          {% if potential_match %}
+            <span class="badge rounded-pill px-3 py-1" style="background-color: #f0fdf4; color: #166534; border: 1px solid #bbf7d0;">
+              Linked to AI Match ({{ potential_match.match_percentage }}%)
+            </span>
+          {% endif %}
+        </div>
+        <h3 class="fw-bold mb-2" style="color: #166534;">Submit Ownership Verification Claim</h3>
+        <p class="text-muted small mb-4">
+          To protect campus belongings from fraudulent pickups, please provide distinguishing details that demonstrate you are the genuine owner.
+        </p>
+
+        <form method="post" enctype="multipart/form-data" novalidate>
+          {% csrf_token %}
+
+          {% if form.non_field_errors %}
+            <div class="alert alert-danger rounded-3 py-2">
+              {% for error in form.non_field_errors %}
+                <div class="small">{{ error }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          <!-- Field 1: Claim Description -->
+          <div class="mb-3">
+            <label for="{{ form.claim_description.id_for_label }}" class="form-label fw-bold text-dark small">
+              Circumstances of Loss &amp; Overview <span class="text-danger">*</span>
+            </label>
+            {{ form.claim_description }}
+            {% if form.claim_description.errors %}
+              <div class="text-danger small mt-1">{{ form.claim_description.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Field 2: Distinguishing Features -->
+          <div class="mb-3">
+            <label for="{{ form.distinguishing_features.id_for_label }}" class="form-label fw-bold text-dark small">
+              Unique Identifying Features <span class="text-danger">*</span>
+            </label>
+            {{ form.distinguishing_features }}
+            <div class="form-text small text-muted">{{ form.distinguishing_features.help_text }}</div>
+            {% if form.distinguishing_features.errors %}
+              <div class="text-danger small mt-1">{{ form.distinguishing_features.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Field 3: Contents of item (optional) -->
+          <div class="mb-3">
+            <label for="{{ form.item_contents.id_for_label }}" class="form-label fw-bold text-dark small">
+              Internal Contents <span class="text-muted fw-normal">(Optional — Bags, Wallets, Notebooks)</span>
+            </label>
+            {{ form.item_contents }}
+            <div class="form-text small text-muted">{{ form.item_contents.help_text }}</div>
+            {% if form.item_contents.errors %}
+              <div class="text-danger small mt-1">{{ form.item_contents.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Field 4: Last seen location/time -->
+          <div class="mb-3">
+            <label for="{{ form.last_seen_details.id_for_label }}" class="form-label fw-bold text-dark small">
+              When &amp; Where Did You Last Possess the Item? <span class="text-muted fw-normal">(Optional)</span>
+            </label>
+            {{ form.last_seen_details }}
+            {% if form.last_seen_details.errors %}
+              <div class="text-danger small mt-1">{{ form.last_seen_details.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Field 5: Evidence Upload -->
+          <div class="mb-4">
+            <label for="{{ form.evidence_file.id_for_label }}" class="form-label fw-bold text-dark small">
+              Upload Ownership Evidence <span class="text-muted fw-normal">(Optional)</span>
+            </label>
+            {{ form.evidence_file }}
+            <div class="form-text small text-muted">{{ form.evidence_file.help_text }}</div>
+            {% if form.evidence_file.errors %}
+              <div class="text-danger small mt-1">{{ form.evidence_file.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center pt-3 border-top">
+            <a href="{% url 'items:detail' item.id %}" class="btn px-4">
+              Cancel
+            </a>
+            <button type="submit" class="btn px-5">
+              Submit Ownership Claim
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

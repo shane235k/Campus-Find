@@ -12,6 +12,7 @@ urlpatterns = [
     path("report/found/", views.ReportFoundItemView.as_view(), name="report_found"),
     
     # Backwards-compatible legacy shortcuts
+    path("report/", lambda request: redirect("items:report_found"), name="report"),
     path("report-lost/", lambda request: redirect("items:report_lost"), name="report_lost_legacy"),
     path("report-found/", lambda request: redirect("items:report_found"), name="report_found_legacy"),
 

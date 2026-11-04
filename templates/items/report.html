@@ -4,7 +4,7 @@
 {% block title %}{{ page_title }} — Campus Lost &amp; Found Hub{% endblock %}
 
 {% block content %}
-<section class="py-5" style="background-color: var(--bg-main); min-height: 85vh;">
+<section class="py-5" style="background-color: var(--bg-page); min-height: 85vh;">
   <div class="container">
     <div class="row justify-content-center">
       <div class="col-lg-8 col-xl-7">
@@ -12,37 +12,42 @@
         <!-- Breadcrumb -->
         <nav aria-label="breadcrumb" class="mb-4">
           <ol class="breadcrumb small">
-            <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-decoration-none">Home</a></li>
-            <li class="breadcrumb-item"><a href="{% url 'items:index' %}" class="text-decoration-none">Items Catalog</a></li>
-            <li class="breadcrumb-item active" aria-current="page">{{ page_title }}</li>
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'items:index' %}">Catalog</a></li>
+            <li class="breadcrumb-item active text-dark fw-bold" aria-current="page">{{ page_title }}</li>
           </ol>
         </nav>
 
-        <div class="card border-0 shadow-lg rounded-4 overflow-hidden bg-white">
+        <div class="card border border-2 rounded-4 overflow-hidden bg-white shadow-sm" style="border-color: var(--border-light);">
           
-          <!-- Header Banner -->
-          <div class="p-4 text-white" style="background: linear-gradient(135deg, var(--navy-primary) 0%, var(--navy-light) 100%);">
+          <!-- Header Banner (Strict Green & White) -->
+          <div class="p-4 border-bottom" style="background-color: var(--green-subtle); border-color: var(--border-light);">
             <div class="d-flex align-items-center gap-3">
-              <div class="rounded-circle bg-white bg-opacity-10 d-flex align-items-center justify-content-center p-3" style="width: 58px; height: 58px;">
-                <i class="bi {{ header_icon }} fs-2 text-white"></i>
+              <div class="rounded-circle bg-white border border-2 d-flex align-items-center justify-content-center p-3" style="width: 58px; height: 58px; border-color: var(--green-primary);">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="12" y1="18" x2="12" y2="12"></line>
+                  <line x1="9" y1="15" x2="15" y2="15"></line>
+                </svg>
               </div>
               <div>
-                <span class="badge bg-{{ badge_color }} text-uppercase fw-bold mb-1" style="font-size: 0.7rem; letter-spacing: 0.05em;">
+                <span class="badge border text-uppercase fw-bold mb-1" style="background-color: var(--green-primary); color: #ffffff; font-size: 0.72rem;">
                   {{ item_type }} Report
                 </span>
-                <h4 class="fw-bold mb-0 text-white">{{ headline }}</h4>
-                <small class="text-white-50">{{ subheadline }}</small>
+                <h4 class="fw-bold mb-0 text-dark" style="font-family: Arial, sans-serif;">{{ headline }}</h4>
+                <small class="text-muted">{{ subheadline }}</small>
               </div>
             </div>
           </div>
 
-          <div class="card-body p-4 p-md-5">
+          <div class="card-body p-4 p-md-5 bg-white">
 
             <!-- Non-field Errors -->
             {% if form.non_field_errors %}
               <div class="alert alert-danger border-0 rounded-3 mb-4" role="alert">
                 {% for error in form.non_field_errors %}
-                  <div class="small"><i class="bi bi-exclamation-triangle-fill me-2"></i>{{ error }}</div>
+                  <div class="small">{{ error }}</div>
                 {% endfor %}
               </div>
             {% endif %}
@@ -54,7 +59,7 @@
                 
                 <!-- Title -->
                 <div class="col-12">
-                  <label for="{{ form.title.id_for_label }}" class="form-label fw-semibold text-secondary small">
+                  <label for="{{ form.title.id_for_label }}" class="form-label fw-bold text-dark small" style="font-family: Arial, sans-serif;">
                     Item Title <span class="text-danger">*</span>
                   </label>
                   <input type="text" name="title" id="{{ form.title.id_for_label }}" 
@@ -70,12 +75,12 @@
 
                 <!-- Description -->
                 <div class="col-12">
-                  <label for="{{ form.description.id_for_label }}" class="form-label fw-semibold text-secondary small">
-                    Detailed Narrative &amp; Distinguishing Marks <span class="text-danger">*</span>
+                  <label for="{{ form.description.id_for_label }}" class="form-label fw-bold text-dark small" style="font-family: Arial, sans-serif;">
+                    Detailed Description &amp; Distinguishing Marks <span class="text-danger">*</span>
                   </label>
                   <textarea name="description" id="{{ form.description.id_for_label }}" rows="4"
                             class="form-control {% if form.description.errors %}is-invalid{% endif %}" 
-                            placeholder="Describe colors, scratches, brand, stickers, keychains, case types, or non-sensitive visible details..." required>{{ form.description.value|default:'' }}</textarea>
+                            placeholder="Describe colors, scratches, brand, stickers, keychains, case types, or visible details..." required>{{ form.description.value|default:'' }}</textarea>
                   {% if form.description.errors %}
                     <div class="text-danger small mt-1">{{ form.description.errors.0 }}</div>
                   {% else %}
@@ -85,7 +90,7 @@
 
                 <!-- Category -->
                 <div class="col-md-6">
-                  <label for="{{ form.category.id_for_label }}" class="form-label fw-semibold text-secondary small">
+                  <label for="{{ form.category.id_for_label }}" class="form-label fw-bold text-dark small" style="font-family: Arial, sans-serif;">
                     Classification Category <span class="text-danger">*</span>
                   </label>
                   <select name="category" id="{{ form.category.id_for_label }}" 
@@ -102,7 +107,7 @@
 
                 <!-- Campus Location -->
                 <div class="col-md-6">
-                  <label for="{{ form.location.id_for_label }}" class="form-label fw-semibold text-secondary small">
+                  <label for="{{ form.location.id_for_label }}" class="form-label fw-bold text-dark small" style="font-family: Arial, sans-serif;">
                     {{ form.location.label }} <span class="text-danger">*</span>
                   </label>
                   <select name="location" id="{{ form.location.id_for_label }}" 
@@ -119,7 +124,7 @@
 
                 <!-- Date Lost / Found -->
                 <div class="col-md-6">
-                  <label for="{{ form.date_lost_or_found.id_for_label }}" class="form-label fw-semibold text-secondary small">
+                  <label for="{{ form.date_lost_or_found.id_for_label }}" class="form-label fw-bold text-dark small" style="font-family: Arial, sans-serif;">
                     {{ form.date_lost_or_found.label }} <span class="text-danger">*</span>
                   </label>
                   <input type="date" name="date_lost_or_found" id="{{ form.date_lost_or_found.id_for_label }}" 
@@ -132,8 +137,8 @@
 
                 <!-- Photograph -->
                 <div class="col-md-6">
-                  <label for="{{ form.image.id_for_label }}" class="form-label fw-semibold text-secondary small">
-                    Photograph <span class="badge bg-light text-muted border ms-1">Optional</span>
+                  <label for="{{ form.image.id_for_label }}" class="form-label fw-bold text-dark small" style="font-family: Arial, sans-serif;">
+                    Photograph <span class="badge bg-light text-dark border ms-1">Optional</span>
                   </label>
                   <input type="file" name="image" id="{{ form.image.id_for_label }}" 
                          class="form-control {% if form.image.errors %}is-invalid{% endif %}" 
@@ -147,18 +152,24 @@
 
                 <!-- Guidance Alert -->
                 <div class="col-12 mt-3">
-                  <div class="alert alert-light border rounded-3 p-3 small text-muted d-flex align-items-start gap-2">
-                    <i class="bi bi-shield-check text-primary fs-5 mt-1"></i>
+                  <div class="alert border rounded-4 p-3 small text-muted d-flex align-items-start gap-2" style="background-color: var(--green-subtle); border-color: var(--green-border) !important;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-1 flex-shrink-0">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
                     <div>
-                      <strong>Privacy Protection:</strong> Your report is registered under your authenticated account, but personal contact information (email, phone, student ID) is never made publicly accessible on catalog pages.
+                      <strong class="text-dark">Privacy Protection:</strong> Your report is registered under your authenticated account, but personal contact details (email, phone, student ID) are never exposed publicly on catalog listings.
                     </div>
                   </div>
                 </div>
 
-                <!-- Submit Button -->
+                <!-- Submit Button: Rounded Green with White Text -->
                 <div class="col-12 mt-4 pt-2">
-                  <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold rounded-3 shadow-sm" style="background-color: var(--navy-primary); border-color: var(--navy-primary);">
-                    <i class="bi bi-send-fill me-2"></i> Submit {{ item_type }} Report
+                  <button type="submit" class="btn w-100 py-3" style="color: #ffffff !important;">
+                    <span>Submit {{ item_type }} Report</span>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="22" y1="2" x2="11" y2="13"></line>
+                      <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
                   </button>
                 </div>
 
@@ -172,4 +183,3 @@
   </div>
 </section>
 {% endblock %}
-

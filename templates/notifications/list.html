@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Notifications — Campus Lost &amp; Found Hub{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+    <div>
+      <h2 class="fw-bold mb-1 d-flex align-items-center gap-2" style="color: #166534;">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+        </svg>
+        My Notifications
+      </h2>
+      <p class="text-muted small mb-0">Stay updated on match discoveries, claim submissions, and administrative verification decisions.</p>
+    </div>
+    {% if unread_count > 0 %}
+      <div>
+        <form method="post" action="{% url 'notifications:mark_all_read' %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-sm px-3">
+            Mark All as Read ({{ unread_count }})
+          </button>
+        </form>
+      </div>
+    {% endif %}
+  </div>
+
+  {% if notifications %}
+    <div class="card border border-success-subtle shadow-sm rounded-4 overflow-hidden bg-white mb-4">
+      <div class="list-group list-group-flush">
+        {% for note in notifications %}
+          <div class="list-group-item p-3 p-md-4 d-flex justify-content-between align-items-center gap-3 {% if not note.is_read %}border-start border-4 border-success{% endif %}" style="{% if not note.is_read %}background-color: #f0fdf4;{% endif %}">
+            <div class="d-flex align-items-start gap-3">
+              <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 44px; height: 44px; background-color: #dcfce7; color: #14532d;">
+                {% if note.notification_type == 'CLAIM_APPROVED' %}
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                {% elif note.notification_type == 'CLAIM_REJECTED' %}
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+                {% elif note.notification_type == 'MATCH_FOUND' %}
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line></svg>
+                {% else %}
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                {% endif %}
+              </div>
+              <div>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                  <h6 class="fw-bold mb-0 text-dark">{{ note.title }}</h6>
+                  {% if not note.is_read %}
+                    <span class="badge rounded-pill px-2" style="background-color: #15803d; color: #ffffff; font-size: 0.65rem;">New</span>
+                  {% endif %}
+                  <span class="text-muted small" style="font-size: 0.75rem;">&bull; {{ note.created_at|timesince }} ago</span>
+                </div>
+                <p class="text-secondary small mb-1">{{ note.message }}</p>
+                {% if note.target_url %}
+                  <a href="{{ note.target_url }}" class="small fw-semibold text-decoration-none" style="color: #15803d;">
+                    View Related Item / Claim &rarr;
+                  </a>
+                {% endif %}
+              </div>
+            </div>
+
+            {% if not note.is_read %}
+              <form method="post" action="{% url 'notifications:mark_read' note.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm px-3 text-nowrap" title="Mark as read">
+                  Read
+                </button>
+              </form>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+      <nav aria-label="Notifications pagination">
+        <ul class="pagination justify-content-center">
+          {% if page_obj.has_previous %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            </li>
+          {% endif %}
+          <li class="page-item active">
+            <span class="page-link" style="background-color: #15803d; border-color: #15803d; color: #ffffff; font-family: Arial, sans-serif; font-weight: 600;">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+          </li>
+          {% if page_obj.has_next %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+            </li>
+          {% endif %}
+        </ul>
+      </nav>
+    {% endif %}
+
+  {% else %}
+    <div class="card border border-success-subtle shadow-sm rounded-4 p-5 text-center bg-white my-4">
+      <div class="mx-auto mb-3 d-inline-flex align-items-center justify-content-center rounded-circle" style="width: 64px; height: 64px; background-color: #f0fdf4;">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+        </svg>
+      </div>
+      <h4 class="fw-bold mb-2" style="color: #166534;">No Notifications Yet</h4>
+      <p class="text-muted small mx-auto mb-4" style="max-width: 480px;">
+        When you submit an ownership claim, receive AI match alerts, or an administrator updates your report, notifications will appear here.
+      </p>
+      <div>
+        <a href="{% url 'dashboard:student' %}" class="btn px-4">
+          Return to Dashboard
+        </a>
+      </div>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
