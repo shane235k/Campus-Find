@@ -20,7 +20,8 @@ __pycache__/
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
-media/item_images/**
+media/item_images/*
+!media/item_images/*.png
 !media/item_images/.gitkeep
 media/profile_pics/**
 !media/profile_pics/.gitkeep

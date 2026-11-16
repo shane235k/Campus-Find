@@ -211,3 +211,35 @@ class Item(models.Model):
         if full_name:
             return full_name
         return self.reported_by.username
+
+
+class StoredImage(models.Model):
+    """Stores persistent image binary data in the database so images survive across multiple devices."""
+
+    filename = models.CharField(
+        max_length=255,
+        unique=True,
+        db_index=True,
+        help_text="Filename of the stored image (e.g. watch_found.png).",
+    )
+    content_type = models.CharField(
+        max_length=50,
+        default="image/png",
+        help_text="MIME type of the image (e.g. image/png, image/jpeg).",
+    )
+    image_base64 = models.TextField(
+        help_text="Base64-encoded image data stored in the database.",
+    )
+    created_at = models.DateTimeField(
+        default=timezone.now,
+        editable=False,
+    )
+
+    class Meta:
+        verbose_name = "Stored Image"
+        verbose_name_plural = "Stored Images"
+        ordering = ["filename"]
+
+    def __str__(self):
+        return self.filename
+

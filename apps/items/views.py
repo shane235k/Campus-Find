@@ -299,3 +299,42 @@ class ItemStatusUpdateView(AdminRequiredMixin, View):
             error_msg = form.errors.get("status", ["Invalid status choice or transition selected."])[0]
             messages.error(request, error_msg)
         return redirect(item.get_absolute_url())
+
+
+def serve_item_image(request, filename):
+    """Dynamic media server that fetches images directly from the database if missing on disk.
+    
+    Ensures that when the project runs on any device connected to the database,
+    images are always rendered seamlessly even without manual file transfers.
+    """
+    import base64
+    import os
+    from django.conf import settings
+    from django.http import FileResponse, Http404, HttpResponse
+    from .models import StoredImage
+
+    clean_name = os.path.basename(filename)
+    disk_path = os.path.join(settings.MEDIA_ROOT, "item_images", clean_name)
+
+    # 1. If file already exists on disk, serve it directly
+    if os.path.exists(disk_path) and os.path.getsize(disk_path) > 0:
+        return FileResponse(open(disk_path, "rb"), content_type="image/png")
+
+    # 2. If missing on disk (e.g. on another device), retrieve from StoredImage in database
+    stored = StoredImage.objects.filter(filename=clean_name).first()
+    if not stored:
+        stored = StoredImage.objects.filter(filename__endswith=clean_name).first()
+
+    if stored and stored.image_base64:
+        image_bytes = base64.b64decode(stored.image_base64)
+        # Cache to local disk on this device for high-performance subsequent loads
+        try:
+            os.makedirs(os.path.dirname(disk_path), exist_ok=True)
+            with open(disk_path, "wb") as f:
+                f.write(image_bytes)
+        except Exception as exc:
+            logger.warning("Could not cache image to disk: %s", exc)
+        return HttpResponse(image_bytes, content_type=stored.content_type)
+
+    raise Http404("Image not found on disk or in database.")
+

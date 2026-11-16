@@ -9,10 +9,14 @@ from django.contrib import admin
 from django.urls import include, path
 
 from config.views import HomeView
+from apps.items.views import serve_item_image
 
 urlpatterns = [
     # Administration
     path("admin/", admin.site.urls),
+
+    # Database-backed Media Image Server (renders images from DB on any device)
+    path("media/item_images/<path:filename>", serve_item_image, name="serve_item_image"),
 
     # Public Landing Page
     path("", HomeView.as_view(), name="home"),
